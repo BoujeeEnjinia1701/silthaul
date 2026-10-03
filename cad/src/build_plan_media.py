@@ -34,7 +34,8 @@ COL = {"frame": "#0F766E", "drum": "#C2410C", "drum_bearings": "#374151", "crank
        "guard": "#CA8A04", "cranks": "#111827", "pawls": "#1D4ED8", "stakes": "#57534E", "box": "#2563EB",
        "tip_bar": "#1E3A8A", "bridles": "#475569", "tail_plate": "#0E7490", "tail_spacers": "#64748B",
        "sheaves": "#D4A017", "keeper": "#155E75", "anchors": "#111827", "cheeks": "#A16207",
-       "decks": "#9CA3AF", "roller": "#15803D", "axle": "#374151", "ropes": "#E11D48", "sling": "#F97316"}
+       "decks": "#9CA3AF", "roller": "#15803D", "axle": "#374151", "ropes": "#E11D48", "sling": "#F97316",
+       "cross_members": "#14B8A6", "frame_bolts": "#111827", "box_2": "#2563EB", "bridles_2": "#475569"}
 
 
 def part(name, shape, key, explode=(0, 0, 0)):
@@ -55,7 +56,8 @@ def overview():
     # groups laid side by side so every component shows; numbers follow the build order
     cap_dx, box_dy, tail_dy, ramp_dy = 0, -1700, -700, -2900
     items = [
-        ("Capstan frame", CAP["frame"], "frame", (0, 0, 0)),
+        ("Side frames (2)", CAP["frame"], "frame", (0, 0, 0)),
+        ("Cross members (4)", CAP["cross_members"], "cross_members", (0, 0, 350)),
         ("Winding drum with ratchet wheels", CAP["drum"], "drum", (0, 0, 650)),
         ("Pawls (2)", CAP["pawls"], "pawls", (0, 450, 600)),
         ("Crank shaft", CAP["crank_shaft"], "crank_shaft", (0, 0, 900)),
@@ -63,7 +65,7 @@ def overview():
         ("Cranks with handles (2)", CAP["cranks"], "cranks", (0, 0, 1200)),
         ("Chain guard", CAP["guard"], "guard", (0, -700, 500)),
         ("Ground stakes (4)", stakes_above(), "stakes", (0, 0, -150)),
-        ("Scraper box", BOX["box"], "box", (-300, box_dy, 0)),
+        ("Scraper boxes (2, one shown)", BOX["box"], "box", (-300, box_dy, 0)),
         ("Tipping bar", BOX["tip_bar"], "tip_bar", (-300, box_dy, 350)),
         ("Tail plate with pins", TAIL["tail_plate"], "tail_plate", (-2800, tail_dy, 0)),
         ("Sheave spacers (2)", TAIL["tail_spacers"], "tail_spacers", (-2800, tail_dy, 200)),
@@ -72,6 +74,7 @@ def overview():
         ("Ramp decks (2)", RAMP["decks"], "decks", (-700, ramp_dy, 300)),
         ("Crest roller and axle", RAMP["roller"] + RAMP["axle"], "roller", (-700, ramp_dy, 600)),
         ("Drum bearings (2), bought", CAP["drum_bearings"], "drum_bearings", (0, 0, 350)),
+        ("Frame bolts (12), bought", CAP["frame_bolts"], "frame_bolts", (0, 0, 350)),
         ("Crank bearings (2), bought", CAP["crank_bearings"], "crank_bearings", (0, 0, 650)),
         ("Roller chain, bought", CAP["chain"], "chain", (0, -500, 650)),
         ("Shear pin, bought", CAP["shear_pin"], "shear_pin", (0, -350, 1050)),
@@ -81,26 +84,36 @@ def overview():
     ]
     parts = [part(n, s, k, e) for n, s, k, e in items]
     bv.overview(parts, OUT / "overview.png", "SiltHaul prototype: every component in build order",
-                subtitle="Made parts first (1 to 16), then bought parts; ropes and sling not shown",
+                subtitle="Made parts first (1 to 17), then bought parts; ropes and sling not shown",
                 key=True, size=(11, 7.5))
 
 
 # ----------------------------------------------------------------- making sketches
 def sheets():
-    cap_all = [Part(k, v, "#D1D5DB") for k, v in CAP.items() if k != "stakes"]
+    cap_all = [Part(k, v, "#D1D5DB") for k, v in CAP.items() if k != "stakes" and not k.startswith("frame_side")]
     S = [
-        ("SLH-DWG-101", "Capstan frame: making sketch", CAP["frame"], "frame",
-         "40 x 40 x 2 SHS, 40 x 40 x 3 SHS anchor bar, 8 and 10 mm plate, 33.7 tube",
-         ["Two side frames, each: rail 890 long, post 40 x 40 rising to 805, front and rear braces",
+        ("SLH-DWG-101", "Capstan side frames: making sketch", CAP["frame"], "frame",
+         "40 x 40 x 2 SHS, 8 and 6 mm plate, 12 mm bar, 33.7 tube",
+         ["Two welded side frames, each: rail 890 long, post rising to 805, two braces",
           "Bearing pad 180 x 50 x 8 on two short posts; top of pad 157 up",
           "Top plate 150 x 60 x 8 on the post; top 813 up, centre 150 behind the drum axis",
-          f"Side frames {2 * D['yb']:.0f} apart, centre to centre; cross rails front and rear",
-          "Top tie 700 up between the posts; anchor bar 40 x 40 x 3 at 180 to 220 up",
-          "Anchor eye 10 mm plate, 22 mm hole 200 up, on the bar centre line",
-          "Pawl brackets 6 mm on the +Y post and +Y front brace, 12 mm pins 300 up",
-          "Four stake tubes 33.7 x 3.2 x 80 on the rail outsides",
-          "Tack on a flat table, check diagonals within 3 mm, then weld all round",
-          "Check: pads level and in line within 1 mm; top plates likewise"]),
+          f"Side frames {2 * D['yb']:.0f} apart, centre to centre, once bolted",
+          "Rail: two 11 mm holes across, 20 up, at 335 and 405 in front of the axis",
+          "Rail: two 11 mm holes across, 20 up, at 385 and 455 behind the axis",
+          "Post: two 11 mm holes across, 683 and 757 up; rear brace: two 13 mm",
+          "Pawl brackets and 12 mm pins on the +Y side frame only, 300 up",
+          "Four stake tubes 33.7 x 3.2 x 80 on the rail outsides; guard tabs on -Y",
+          "Check: each side frame flat within 2 mm; pads and top plates level"]),
+        ("SLH-DWG-110", "Frame cross members: making sketch", CAP["cross_members"], "cross_members",
+         "40 x 40 x 2 SHS, 40 x 40 x 3 SHS anchor bar, 8 and 10 mm plate",
+         ["Four cross members, each a tube with an 8 mm end plate welded on each end",
+          "Front and rear cross rails: tube 500, end plates 100 x 40, holes 70 apart",
+          "Top tie: tube 500, end plates 40 x 110, holes 74 apart",
+          "Anchor bar 40 x 40 x 3: tube 500, end plates 78 x 104, two 13 mm holes",
+          "Anchor eye 10 mm plate, 22 mm hole 200 up, welded to the middle of the bar",
+          "516 over the end plates; plates square to the tube within 0.5 degree",
+          "Drill each end plate with its side frame, clamped, so the holes line up",
+          "Check: each member fits between the side frames with no gap over 1 mm"]),
         ("SLH-DWG-102", "Winding drum: making sketch", CAP["drum"], "drum",
          "219.1 x 3.0 tube; 4 mm rings and discs; 30 mm S355 shaft; 6 mm ratchet wheels",
          [f"Tube {D['drum_len']:.0f} long, ends square; rings 280 OD at both ends and the middle",
@@ -145,13 +158,14 @@ def sheets():
           "Check: straight within 3 mm"]),
         ("SLH-DWG-107", "Scraper box: making sketch", BOX["box"], "box",
          "2 mm sheet, 8 mm flat bar, 10 mm plate, 33.7 tube",
-         ["Inside 446 wide, 600 long to the lip, sides 200 high",
-          "Floor 520 long; back slopes 80 so it rides over mud going back",
+         ["Make two the same. Inside 210 wide, 845 long to the lip, sides 280 high",
+          "Floor 735 long; back slopes 110 so it rides over mud going back",
           "Lip 8 x 50 bar set at 20 degrees, bevelled to the floor",
-          "Two skids 8 x 25 under the floor, 340 apart, rear ends cut at 45 deg",
+          "Two skids 8 x 25 under the floor, 160 apart, rear ends cut at 45 deg",
           "Four bridle lugs 10 mm, 19 mm holes 75 up: two at the front, two at the rear",
-          "Tipping bar socket 33.7 x 150 at 45 deg on the back; bar 26.9 x 900 loose",
-          "Check: 40 L of water to a 165 mm level fits; sits flat on its skids"]),
+          "Tipping bar socket 33.7 x 150 at 45 deg on the back; one bar 26.9 x 900 loose",
+          "258 over the shackle pins, so two boxes pass 42 apart on lines 300 apart",
+          "Check: 40 L of water to a 245 mm level fits; sits flat on its skids"]),
         ("SLH-DWG-108", "Tail plate, pins and keeper: making sketch",
          TAIL["tail_plate"] + TAIL["keeper"] + TAIL["tail_spacers"], "tail_plate",
          "10 mm plate, 25 mm S355 pins, 6 mm keeper bar",
@@ -204,7 +218,8 @@ def joints():
     C = build_components(P, short=True)
     ox = P["short"]["x_cap"]
     r4 = (ox + xa - 40, ox + xa + 250, P["cap_y"] - 150, P["cap_y"] + 150, 120, 280)
-    bv.joint([part("Anchor bar and eye", crop(C["frame"].shape, *r4), "frame"),
+    bv.joint([part("Anchor bar and eye", crop(C["cross_members"].shape, *r4), "cross_members"),
+              part("Rear brace", crop(C["frame"].shape, *r4), "frame"),
               part("Bow shackle and round sling", crop(C["sling"].shape, *r4), "sling")],
              OUT / "joint-04.png", "Joint 4: sling on the anchor eye", "The sling pulls level with the drum axis, 200 mm up")
     # 5 box front lug and bridle
@@ -235,12 +250,22 @@ def joints():
               part("Roller chain", CAP["chain"], "chain"),
               part("Chain guard (cut away)", crop(CAP["guard"], -400, 400, D["y_guard"][0], (D["y_guard"][0] + D["y_guard"][1]) / 2, 0, 1100), "guard")],
              OUT / "joint-08.png", "Joint 8: chain drive inside its guard", "Outer half of the guard removed; 4:1 from crank to drum", azim=-120, elev=12)
+    # 9 bolted cross rail on the side rail (flat-pack frame)
+    xf = P["x_cross"][0]
+    r9 = (xf - 90, xf + 90, -yb - 40, -yb + 120, -5, 70)
+    bv.joint([part("Side rail (side frame)", crop(CAP["frame"], *r9), "frame"),
+              part("Cross rail and its end plate", crop(CAP["cross_members"], *r9), "cross_members"),
+              part("Two M10 bolts, nuts outside", crop(CAP["frame_bolts"], *r9), "frame_bolts")],
+             OUT / "joint-09.png", "Joint 9: cross rail bolted to a side frame",
+             "8 mm end plate against the rail's inner face; two M10 bolts through plate and rail", azim=-35, elev=28)
 
 
 # ----------------------------------------------------------------- steps
 def steps():
     g = lambda n, k, s=None: part(n, CAP[k] if s is None else s, k)  # noqa: E731
-    fr, dr = g("Frame", "frame"), g("Drum", "drum")
+    sf, cm, fb = g("Side frames", "frame"), g("Cross members", "cross_members"), g("Frame bolts", "frame_bolts")
+    fr = Part("Frame", CAP["frame"] + CAP["cross_members"] + CAP["frame_bolts"], COL["frame"], None, (0, 0, 0))
+    dr = g("Drum", "drum")
     db, cb = g("Drum bearings", "drum_bearings"), g("Crank bearings", "crank_bearings")
     cs, ss, sp = g("Crank shaft", "crank_shaft"), g("Small sprocket", "small_sprocket"), g("Shear pin", "shear_pin")
     ch, gd, ck, pw = g("Chain", "chain"), g("Guard", "guard"), g("Cranks", "cranks"), g("Pawls", "pawls")
@@ -249,21 +274,23 @@ def steps():
     def mv(p, e):
         return Part(p.name, p.shape, p.color, None, e)
     S = [
-        ([dr], [mv(db, (0, 0, 0))], "Step 1: drum bearings onto the drum shaft",
+        ([sf], [mv(cm, (0, 0, 300)), mv(fb, (0, 0, 300))], "Step 1: bolt the frame together",
+         "Four cross members between the side frames; two bolts each end, nuts outside", None),
+        ([dr], [mv(db, (0, 0, 0))], "Step 2: drum bearings onto the drum shaft",
          "Slide a UCP206 onto each end of the shaft, grease nipples up; set screws loose", [mv(db, (0, 0, 0))]),
-        ([fr], [mv(dr, (0, 0, 500)), mv(db, (0, 0, 500))], "Step 2: lower the drum onto the pads",
+        ([fr], [mv(dr, (0, 0, 500)), mv(db, (0, 0, 500))], "Step 3: lower the drum onto the pads",
          "Two people; bolt each bearing with two M14; tighten set screws", None),
         ([fr, dr, db], [mv(cb, (0, 0, 400)), mv(cs, (0, 0, 400)), mv(ss, (0, -150, 400))],
-         "Step 3: crank shaft, hub and bearings onto the top plates", "Hub on the -Y end; M12 bolts; shaft turns by hand", None),
-        ([fr, dr, db, cb, cs, ss], [mv(ch, (0, -250, 0))], "Step 4: fit the chain",
+         "Step 4: crank shaft, hub and bearings onto the top plates", "Hub on the -Y end; M12 bolts; shaft turns by hand", None),
+        ([fr, dr, db, cb, cs, ss], [mv(ch, (0, -250, 0))], "Step 5: fit the chain",
          "Over both sprockets; join with the connecting link, clip closed end leading", None),
-        ([fr, dr, db, cb, cs, ss, ch], [mv(sp, (0, -250, 0))], "Step 5: fit the shear pin",
+        ([fr, dr, db, cb, cs, ss, ch], [mv(sp, (0, -250, 0))], "Step 6: fit the shear pin",
          "4 mm pin through hub and shaft, split pin; spares on the tag chain", None),
-        ([fr, dr, db, cb, cs, ss, ch, sp], [mv(gd, (0, -350, 0))], "Step 6: chain guard on",
+        ([fr, dr, db, cb, cs, ss, ch, sp], [mv(gd, (0, -350, 0))], "Step 7: chain guard on",
          "Two M6 screws to the tabs; never turn the cranks with it off", None),
-        ([fr, dr, db, cb, cs, ss, ch, sp, gd], [mv(ck, (0, 0, 300))], "Step 7: cranks on",
+        ([fr, dr, db, cb, cs, ss, ch, sp, gd], [mv(ck, (0, 0, 300))], "Step 8: cranks on",
          "180 degrees apart; pin each to the shaft", None),
-        ([fr, dr, db, cb, cs, ss, ch, sp, gd, ck], [mv(pw, (0, 250, 0))], "Step 8: pawls on their pins",
+        ([fr, dr, db, cb, cs, ss, ch, sp, gd, ck], [mv(pw, (0, 250, 0))], "Step 9: pawls on their pins",
          "Washer and R-clip each; flip one up onto its stop", None),
     ]
     n = 0
@@ -273,21 +300,22 @@ def steps():
     # site steps in the shortened layout
     C = build_components(P, short=True)
     s = lambda k, nm=None, e=(0, 0, 0): Part(nm or C[k].name, C[k].shape, COL[k], None, e)  # noqa: E731
-    capk = ["frame", "drum", "drum_bearings", "crank_bearings", "crank_shaft", "small_sprocket", "shear_pin", "chain", "guard", "cranks", "pawls"]
+    capk = ["frame", "cross_members", "frame_bolts", "drum", "drum_bearings", "crank_bearings", "crank_shaft", "small_sprocket", "shear_pin", "chain", "guard", "cranks", "pawls"]
     cap_done = [s(k) for k in capk]
     stakes = Part("Ground stakes (4)", C["stakes"].shape & bx(0, 9000, -2000, 2000, 0, 300), COL["stakes"], None, (0, 0, 400))
     site = [
         ([], cap_done[:1] and [s(k) for k in capk] + [stakes, s("sling", e=(800, 0, 0))],
-         "Step 9: set the capstan, stakes and sling", "At least 6 m from the door, in line; sling to a tree or vehicle"),
+         "Step 10: set the capstan, stakes and sling", "At least 6 m from the door, in line; sling to a tree or vehicle"),
         (cap_done, [s("tail_plate", e=(0, 0, 400)), s("tail_spacers", e=(0, 0, 400)), s("sheaves", e=(0, 0, 400)),
                                             s("keeper", e=(0, 0, 600)), s("anchors", e=(0, 0, 800))],
-         "Step 10: anchor the tail block", "Drill four 12 mm holes 80 deep in a sound slab; torque the anchors"),
+         "Step 11: anchor the tail block", "Drill four 12 mm holes 80 deep in a sound slab; torque the anchors"),
         (cap_done + [s("tail_plate"), s("sheaves")],
          [s("cheeks", e=(0, 0, 500)), s("decks", e=(0, 0, 500)), s("roller", e=(0, 0, 500)), s("axle", e=(0, 0, 500))],
-         "Step 11: ramp across the threshold", "Cheeks straddle the threshold; roller in line with the ropes"),
+         "Step 12: ramp across the threshold", "Cheeks straddle the threshold; roller in line with the ropes"),
         (cap_done + [s("tail_plate"), s("sheaves"), s("cheeks"), s("decks"), s("roller")],
-         [s("box", e=(0, -900, 0)), s("bridles", e=(0, -900, 0)), s("ropes", e=(0, 0, 300))],
-         "Step 12: reeve the ropes and shackle the box", "Pull rope to the front bridle, return rope round the sheaves to the rear bridle"),
+         [s("box", e=(0, -900, 0)), s("bridles", e=(0, -900, 0)), s("box_2", e=(0, 900, 0)),
+          s("bridles_2", e=(0, 900, 0)), s("tip_bar", e=(0, 900, 0)), s("ropes", e=(0, 0, 300))],
+         "Step 13: reeve the ropes and shackle both boxes", "Pull rope to box 1, return rope to box 2, tail rope round the sheaves between them"),
     ]
     for done, new, title, sub in site:
         n += 1

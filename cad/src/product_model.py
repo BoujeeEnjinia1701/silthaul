@@ -1,4 +1,4 @@
-"""SiltHaul product appearance model (build123d), TRL 3, constructable design (SLH-DDR-002).
+"""SiltHaul product appearance model (build123d), TRL 3, constructable design (SLH-DDR-002, SLH-DDR-003).
 
 For photoreal renders only (.kit/export_views.py, then .kit/photoreal.py on Amish's Mac). Every
 part is the model.py solid itself, placed in the shortened picture layout of model.py (tail
@@ -22,19 +22,21 @@ TITLE = "SiltHaul: hand-capstan scraper that drags flood mud out of homes"
 
 RENDER_VIEWS = [
     {"name": "hero", "groups": ["shell", "internal", "context"], "explode": False, "el": 22, "az": -40,
-     "note": "Product render from the front right and above (about 22 deg elevation); layout shortened. Scraper "
-             "box and tail sheaves inside the doorway, threshold ramp in the door, hand capstan outside with a "
-             "person at the crank, sling to a tree"},
+     "note": "Product render from the front right and above (about 22 deg elevation); layout shortened. One scraper "
+             "box and the tail sheaves inside the doorway, threshold ramp in the door, the second box outside at the "
+             "dump, flat-pack hand capstan with a person at the crank, sling to a tree"},
     {"name": "exploded", "groups": ["shell"], "explode": True, "el": 26, "az": -50,
-     "note": "Exploded hand capstan from the front right and above (about 26 deg elevation): frame, winding drum "
-             "with ratchet wheels, bearings, crank shaft, sprockets and chain, chain guard, cranks and pawls"},
+     "note": "Exploded hand capstan from the front right and above (about 26 deg elevation): side frames and bolted "
+             "cross members, winding drum with ratchet wheels, bearings, crank shaft, sprockets and chain, chain guard, cranks and pawls"},
     {"name": "detail", "groups": ["internal"], "explode": False, "el": 28, "az": -35,
-     "note": "Detail from the front right and above (about 28 deg elevation): scraper box with its bridles and "
-             "tipping bar, tail sheave block, and the doorway ramp with its crest roller"},
+     "note": "Detail from the front right and above (about 28 deg elevation): the two scraper boxes with their "
+             "bridles and tipping bar, tail sheave block, and the doorway ramp with its crest roller"},
 ]
 
 LOOK = {  # key: (colour, material, group, exploded offset)
     "frame": ("#0F766E", "painted steel", "shell", (0, 0, 0)),
+    "cross_members": ("#14B8A6", "painted steel", "shell", (0, 0, 250)),
+    "frame_bolts": ("#9CA3AF", "zinc plated steel", "shell", (0, 0, 250)),
     "drum": ("#C2410C", "painted steel", "shell", (0, 0, 700)),
     "drum_bearings": ("#374151", "cast iron", "shell", (0, 0, 400)),
     "crank_bearings": ("#374151", "cast iron", "shell", (0, 0, 1350)),
@@ -54,6 +56,8 @@ LOOK = {  # key: (colour, material, group, exploded offset)
     "anchors": ("#9CA3AF", "zinc plated steel", "internal", (0, 0, 0)),
     "ropes": ("#E11D48", "polyester rope", "internal", (0, 0, 0)),
     "box": ("#2563EB", "painted steel", "internal", (0, 0, 0)),
+    "box_2": ("#2563EB", "painted steel", "internal", (0, 0, 0)),
+    "bridles_2": ("#475569", "galvanised steel", "internal", (0, 0, 0)),
     "tip_bar": ("#1E3A8A", "painted steel", "internal", (0, 0, 0)),
     "bridles": ("#475569", "galvanised steel", "internal", (0, 0, 0)),
     "cheeks": ("#A16207", "plywood", "internal", (0, 0, 0)),
@@ -78,7 +82,7 @@ def product_parts(P=P):
         if k == "stakes":
             shape = shape & bx(0, 20000, -3000, 3000, 0, 400)
         add(c.name, shape, color, mat, c.bom, grp, ex)
-    # rope wound on the drum: the pull half nearly empty (box at the far end), the return half full
+    # rope wound on the drum: the pull half nearly empty (box 1 at the far end), the return half full (box 2 at the dump)
     L = P["short"]
     xd, yc, hd = L["x_cap"], P["cap_y"], P["hd"]
     r0, r1 = P["drum_tube"][0] / 2, P["drum_tube"][0] / 2 + P["rope_d"]

@@ -1,5 +1,25 @@
 # Review note: SiltHaul
 
+## 2026-10-03: Amish's requirement decisions carried out
+
+Amish, 2026-10-03, on every requirement decision put to him: "1A 2A 3A 4A 5A 6A 7A 8A 9A 10A 11A". For SiltHaul that is 2A (R1) and 7A (R9), recorded in `docs/decisions/0003-amish-requirement-decisions.md` (SLH-DDR-003) and in `docs/06-design-decisions.md` (SLH-DEC-001 v0.2). No commit or push in this session; Amish pushes.
+
+**Changes made and their new results (SLH-CAL-001 v0.3).**
+
+- **2A, second box on the return leg (R1).** Two identical boxes, 210 mm wide inside, 845 mm to the lip, 280 mm sides (40.3 L each at a 245 mm fill, R3 met by design); box 1 on the pull rope, box 2 on the return rope, joined by a tail rope round the tail sheaves (12.5, 9 and 6 m tail ropes, chosen for the room). Each stroke hauls one full box out (752 N) and drags the empty one back (218 N): 970 N, inside the unchanged 1,000 N working pull, so R2 stays 63 N each. A stroke is 3.54 min; 0.68 m³/h, **0.51 m³/h with rest against 0.90 for buckets, ratio 0.57 against the restated 0.5: R1 met on paper** (was 0.36, not met). R1 restated in `docs/03-requirements.md` (v0.4) in Amish's words. The boxes pass 42 mm apart and cross the recentred ramp 26 mm inside its cheeks (R4 met by design). Tail block 636 N on either stroke; at the limit unchanged (0.45 of anchor loads).
+- **7A, flat-pack frame (R9).** Two welded side frames (890 x 814 x 83 mm, 9.2 and 9.6 kg) and four bolted cross members with 8 mm end plates (front and rear cross rails, top tie, anchor bar with eye; 8.0 kg), eight M10 and four M12 bolts; stake tubes moved to 280 mm front and 330 mm rear to clear the bolts. Heaviest lift 23.1 kg (drum with bearings), within 25 kg. Kit packs into about 454 L, 77 % of a 594 L small hatchback boot with the rear seats folded: **R9 met on paper (rear seats folded)** (was at risk). Capstan 65.7 kg; sling-tipping check still holds (145 N m against 271 N m at 10 degrees).
+- **R8** moves to about 20 min with three people, at the limit (bolting the frame and a second box add 4 min); still not verifiable at TRL 3.
+- **R10.** Value-engineering target: USD 2,000. Estimated cost of the constructable design: USD 1,055.60 (USD 944.40 under the target), up USD 168.10: second box USD 80, second bridle set USD 54, rope 62 m (+USD 9.10), frame end plates and drilling USD 10, frame bolts USD 8, paint USD 5. Kit about 154 kg (was 132).
+- Counts: 7 met on paper, 4 met by design, 1 not verifiable at TRL 3; none not met.
+
+**Files.** `cad/src/model.py` (box 2, tail rope, bolted frame; new checks: boxes pass at least 25 mm apart, both at least 15 mm inside the ramp cheeks, cross members and bolts touch the side frames, pack pieces listed; no overlaps, no floating parts), STEP and STL regenerated; `bom/bom.csv` (lines 1, 16, 17, 18, 20, 21, 23); `docs/04-calcs/sizing.py`, `01-sizing.md` (v0.3), `results.csv`; `docs/03-requirements.md` (v0.4); `cad/src/sheets.py`, SLH-DWG-001 and 002 Rev P3; `cad/src/concept_media.py` (hero, exploded, flow, blueprint, model.glb); `cad/src/build_plan_media.py`: overview, SLH-DWG-101 (now side frames), new SLH-DWG-110 (cross members), SLH-DWG-107 (box), joints 04, 05 and new 09, steps 01 to 13 (new step 1, bolting the frame; step 13 reeves both boxes); `docs/05-build-plan.md` (v0.2, figures renumbered); `cad/src/product_model.py` (box 2, cross members and bolts in the views; scenes exported to `/home/claude/renders/silthaul`); headline figures in `README.md` and `docs/02-concept.md`.
+
+**Open decision for Amish (register item 1).** What "fits a small car boot" means. With the seats up the 890 x 814 mm side frames do not lie flat in a typical 950 x 650 mm small-car boot floor. Options: A, accept the rear seats folded as the reference (R9 met on paper); B, split each side frame into bolted tubes, about forty bolts, setup well past 20 min. Recommendation: A.
+
+**Safety.** The boxes pass 42 mm apart: nobody between them while the cranks turn (stop 4). The crank crew leave the cranks to dump, so a pawl must be holding first (stop 5). Tipping a full box now takes about 236 N on the longer box, shared by two people. Frame bolts must be checked tight before each day's first haul; a missing anchor-bar bolt would put the sling load on one bolt.
+
+**Recommended next step.** Amish to answer register item 1; then, when the phase allows, TRL 4 as already recommended, with the R1 trial run using both boxes.
+
 ## Session 2026-10-03: TRL 3 (kit 1.7.0, /to-trl3 under Amish's pre-approval)
 
 Amish, 2026-10-03: "start with the first 14 repos from the list of 29 projects. I pre-approve the batch runs along with any recommendations you come up with. I also accept any cost overruns or variations from the assumed scope cost." Every recommendation in this session is therefore recorded as decided, dated 2026-10-03, in `docs/06-design-decisions.md`. Kit 1.7.0 was installed from the kit source; `.kit/PHASE.yaml` kept as installed.
@@ -85,5 +105,9 @@ Amish, 2026-10-03: "start with the first 14 repos from the list of 29 projects. 
 - `README.md` with concept rationale, burning platform, where it could be used, and what sparked the idea.
 
 ## 2026-10-03: photoreal renders
+
+Rendered with Blender Cycles on Amish's Mac from `cad/src/product_model.py`; captioned with `.kit/photo_caption.py`; `media/card.png` and `media/social-preview.png` made with `.kit/cards.py`. Views: hero, exploded, detail. image_qc passes and `render.py --check` has no FAIL.
+
+## 2026-10-03: photoreal renders redone after Amish's requirement decisions
 
 Rendered with Blender Cycles on Amish's Mac from `cad/src/product_model.py`; captioned with `.kit/photo_caption.py`; `media/card.png` and `media/social-preview.png` made with `.kit/cards.py`. Views: hero, exploded, detail. image_qc passes and `render.py --check` has no FAIL.

@@ -3,7 +3,7 @@ doc_id: SLH-DEC-001
 title: SiltHaul design decisions register
 project: SiltHaul
 doc_type: Design decisions register
-version: "0.1"
+version: "0.2"
 status: Draft
 date: '2026-10-03'
 author: Amish Chadha
@@ -13,6 +13,10 @@ revisions:
   date: '2026-10-03'
   author: Amish Chadha
   change: Register opened; every decision made under Amish's pre-approval of 2026-10-03
+- version: "0.2"
+  date: '2026-10-03'
+  author: Amish Chadha
+  change: Amish's requirement decisions 2A and 7A recorded (SLH-DDR-003); boot reading for R9 opened for Amish
 ---
 
 # SiltHaul design decisions register
@@ -23,7 +27,9 @@ Every design decision still to be made, and every decision made, in one place. E
 
 ## Open decisions
 
-None. All decisions were made under Amish's 2026-10-03 pre-approval.
+| # | To decide | Options | Recommendation | What it affects in the build | Source |
+| --- | --- | --- | --- | --- | --- |
+| 1 | What "fits a small car boot" in R9 means. State: with the flat-pack frame the kit packs into about 454 L, 77 % of a small hatchback's load space with the rear seats folded (1,250 x 950 x 500 mm); with the seats up the 890 x 814 mm side frames do not lie flat in a typical 950 x 650 mm boot floor. | A: accept the rear seats folded as the reference and record R9 as met on paper. B: split each side frame into bolted tubes (rails, posts, braces) so everything fits with the seats up, at about forty bolts and well over 20 min of setup (R8). | A: the seats-folded space is what a volunteer's small car offers in practice, and B breaks R8. | B would replace the side frame making sketch and add about 28 bolts and their holes | SLH-DDR-003; SLH-CAL-001, L3b and L3c |
 
 ## To confirm when parts are bought
 
@@ -38,10 +44,10 @@ None. All decisions were made under Amish's 2026-10-03 pre-approval.
 
 ## Value engineering
 
-Value-engineering target: USD 2,000 (a hypothetical control target, not a limit). Estimated cost of the constructable design: USD 887.50 (USD 1,112.50 under the target). Main cost drivers and savings worth trying:
+Value-engineering target: USD 2,000 (a hypothetical control target, not a limit). Estimated cost of the constructable design: USD 1,055.60 (USD 944.40 under the target). Main cost drivers and savings worth trying:
 
-- The winding drum (USD 98) and the box (USD 78) are the largest made parts; the ramp (USD 73) and the rope (USD 71.50) follow.
-- Bought lifting gear (sling, shackles, bridles, USD 110) is kept at rated, traceable grades because it carries the safety case.
+- The two boxes (USD 160) and the winding drum (USD 98) are the largest made parts; the rope (USD 80.60), the ramp (USD 73) and the frame (USD 72) follow.
+- Bought lifting gear (sling, shackles, two bridle sets, USD 164) is kept at rated, traceable grades because it carries the safety case.
 - Savings worth trying: a drum from a scrap gas cylinder or pipe offcut of the same diameter; a timber ramp with a steel wear strip; buying rope with factory eye splices in bulk.
 
 ## Decisions made
@@ -59,6 +65,8 @@ Value-engineering target: USD 2,000 (a hypothetical control target, not a limit)
 | 2026-10-03 | First co-design candidate to approach: Kerala State Disaster Management Authority (not agreed) | Amish: "I pre-approve the batch runs along with any recommendations you come up with." | SLH-DDR-001, item 11 |
 | 2026-10-03 | SiltHaul capstan recorded as the candidate common block for SaltDrag; CalRig as the first candidate proof-load rig | Amish: "I pre-approve the batch runs along with any recommendations you come up with." | SLH-DDR-001, item 12 |
 | 2026-10-03 | `budget_usd` kept at 2,000 as a value-engineering target | Amish: "I also accept any cost overruns or variations from the assumed scope cost." | SLH-DDR-001, item 13 |
-| 2026-10-03 | R1 kept as the trial target and reported not met on paper | Amish: "I pre-approve the batch runs along with any recommendations you come up with." | SLH-DDR-001, Consequences |
+| 2026-10-03 | R1 kept as the trial target and reported not met on paper (superseded by 2A below) | Amish: "I pre-approve the batch runs along with any recommendations you come up with." | SLH-DDR-001, Consequences |
 | 2026-10-03 | Design for construction: the thirteen changes of SLH-DDR-002 | Amish: "I pre-approve the batch runs along with any recommendations you come up with." | SLH-DDR-002 |
 | 2026-10-03 | Appearance model additions for renders: wound rope on the drum, stakes above ground only, context wall, tree and mannequin | Amish: "I pre-approve the batch runs along with any recommendations you come up with." | docs/REVIEW.md, TRL 3 |
+| 2026-10-03 | 2A: second box on the return leg so the rope loop carries mud both ways; R1 restated as "no lifting or carrying of mud; output at least 0.5 times the same crew with shovels and buckets" (now 0.57, met on paper) | Amish: "1A 2A 3A 4A 5A 6A 7A 8A 9A 10A 11A" | SLH-DDR-003, items 1 to 5 |
+| 2026-10-03 | 7A: bolted flat-pack frame (two welded side frames, four bolted cross members) that fits a small car boot, keeping the 25 kg heaviest-part limit (heaviest lift 23.1 kg) | Amish: "1A 2A 3A 4A 5A 6A 7A 8A 9A 10A 11A" | SLH-DDR-003, items 6 to 8 |

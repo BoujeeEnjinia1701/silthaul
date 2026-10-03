@@ -1,13 +1,13 @@
 id,value,target,status
-R1,0.32 m3/h against 0.90 m3/h for buckets (ratio 0.36); nobody carries mud,At least 2 times the bucket crew,Not met on paper
+R1,0.51 m3/h against 0.90 m3/h for buckets (ratio 0.57); nobody lifts or carries mud,No lifting or carrying of mud; at least 0.5 times the bucket crew,Met on paper
 R2,"63 N each with two at the crank (126 N for one) at 1,000 N",150 N or less,Met on paper
-R3,40.7 L at a 165 mm fill (49 L to the brim),About 40 L,Met by design
-R4,"Box 494 mm over the shackles, ramp 646 mm, tail plate 440 mm",Pass a 0.7 m opening,Met by design
+R3,40.3 L a box at a 245 mm fill (46 L to the brim),About 40 L,Met by design
+R4,"Boxes 258 mm over the shackles, pass 42 mm apart; ramp 646 mm; tail plate 440 mm",Pass a 0.7 m opening,Met by design
 R5,21 turns a half store 12 m of travel; capstan at least 6 m from the door,Up to 15 m tail to capstan,Met by design
 R6,"Rope factor 18 working, 5.4 at the 3000 N overload limit; chain 5.0",At least 5 times the working pull,Met on paper
 R7,"Four M12 anchors in the slab, 0.45 of typical recommended loads at the overload limit","Holds on a bare concrete floor, no wall contact",Met on paper (sound slab assumed)
-R8,About 17 min with three people (estimate),20 min or less,Not verifiable at TRL 3
-R9,Heaviest lift 24.7 kg; capstan frame 950 x 640 x 820 mm,Car boot; heaviest part 25 kg or less,At risk (boot size)
-R10,887.50 USD,"Value-engineering target 2,000 USD","Met on paper, within the target"
+R8,"About 20 min with three people (estimate), at the limit",20 min or less,Not verifiable at TRL 3
+R9,"Heaviest lift 23.1 kg; flat-pack frame, largest piece 890 x 814 x 83 mm; kit 454 L in a 594 L small car boot",Car boot; heaviest part 25 kg or less,Met on paper (rear seats folded)
+R10,"1,055.60 USD","Value-engineering target 2,000 USD","Met on paper, within the target"
 R11,Shear pin releases at 2451 N (1961 to 2941 N),"Rope tension limited to 3,000 N",Met on paper
 R12,"Two ratchet wheels and pawls on the drum shaft, one for each direction",Holds the load when the cranks are let go,Met by design

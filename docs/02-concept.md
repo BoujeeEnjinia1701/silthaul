@@ -33,7 +33,7 @@ Drags flood mud out of homes, lanes and drains with a hand-capstan scraper inste
 
 ## Summary
 
-SiltHaul is a hand-powered slusher for flooded buildings. A steel scraper box, 450 mm wide and holding about 40 L, is tied into a rope loop that runs from a hand capstan outside, through the doorway, round a tail sheave block anchored to the floor at the far end of the room, and back. Cranking one way drags the loaded box out through the door to a dump point; cranking the other way brings it back. Two people at the cranks need 63 N each; nobody lifts or carries mud out of the building. The design is constructable (SLH-DDR-002), its parts cost about USD 888 against a USD 2,000 value-engineering target, and its heaviest lift is 24.7 kg. On paper it moves about 0.32 m³ an hour with a crew of four, about a third of a bucket crew, so it trades output for the end of lifting and carrying (SLH-CAL-001).
+SiltHaul is a hand-powered slusher for flooded buildings. Two steel scraper boxes, each 210 mm wide and holding about 40 L, are tied into a rope loop that runs from a hand capstan outside, through the doorway, round a tail sheave block anchored to the floor at the far end of the room, and back. Cranking one way drags one loaded box out through the door to a dump point while the other comes back empty; cranking the other way swaps them, so mud goes out on every stroke (SLH-DDR-003). Two people at the cranks need 63 N each; nobody lifts or carries mud out of the building. The design is constructable, its frame packs flat, its parts cost about USD 1,056 against a USD 2,000 value-engineering target, and its heaviest lift is 23.1 kg. On paper it moves about 0.51 m³ an hour with a crew of four and a rest allowance, 0.57 times a bucket crew (SLH-CAL-001).
 
 ## How it works
 
@@ -49,7 +49,7 @@ SiltHaul is a hand-powered slusher for flooded buildings. A steel scraper box, 4
 
 | # | Component | What it is |
 | --- | --- | --- |
-| 1 | Capstan frame | Welded 40 mm square tube, 890 x 663 x 814 mm, 24.7 kg, with bearing pads, an anchor bar and eye at drum height, stake tubes and pawl brackets |
+| 1 | Capstan frame | Flat-pack, 40 mm square tube: two welded side frames (890 x 814 mm, 9.2 and 9.6 kg) with bearing pads, stake tubes and pawl brackets, joined by four bolted cross members including an anchor bar and eye at drum height |
 | 2 | Winding drum | 219.1 mm tube in two halves of 21 turns each, on a 30 mm shaft, with a 48-tooth sprocket and two opposite ratchet wheels; 19.0 kg |
 | 3, 4 | Bearings | UCP206 pillow blocks for the drum, UCP205 for the crank shaft |
 | 5 | Crank shaft and cranks | 25 mm shaft 850 mm up, two 250 mm cranks set 180 degrees apart |
@@ -70,16 +70,16 @@ SiltHaul is a hand-powered slusher for flooded buildings. A steel scraper box, 4
 
 | Quantity | Value |
 | --- | --- |
-| Full box | 40.7 L, 85 kg with mud at 1.7 kg/L |
-| Haul pull | 917 N estimated; 1,000 N working pull |
+| Full box | 40.3 L, 86 kg with mud at 1.7 kg/L; two boxes |
+| Haul pull | 970 N estimated for a full box out and the empty one back; 1,000 N working pull |
 | Crank force | 63 N each with two people; 126 N for one |
-| Rope speed | 5.4 m/min loaded, 8.1 m/min empty |
-| Trip over 11 m | 5.65 min; 10.6 trips and 0.43 m³ an hour (0.32 with rest) |
+| Rope speed | 5.4 m/min |
+| Stroke over 11 m | 3.54 min; 17 strokes and 0.68 m³ an hour (0.51 with rest) |
 | Overload limit | Shear pin releases at about 2,450 N; all parts sized on 3,000 N |
 | Rope | Factor 18 on the working pull, 5.4 on the limit |
 | Tail block | 0.45 of recommended anchor loads at the limit |
-| Heaviest lift | Frame 24.7 kg; drum with bearings 23.1 kg |
-| Cost | Value-engineering target: USD 2,000. Estimated cost of the constructable design: USD 887.50 (USD 1,112.50 under the target) |
+| Heaviest lift | Drum with bearings 23.1 kg; box 16.1 kg |
+| Cost | Value-engineering target: USD 2,000. Estimated cost of the constructable design: USD 1,055.60 (USD 944.40 under the target) |
 
 ![Figure 2. Energy per haul](../media/flow.png)
 
@@ -92,7 +92,7 @@ All decided on 2026-10-03 under Amish's pre-approval (SLH-DDR-001 and SLH-DDR-00
 - **Split winding drum, not a friction capstan.** A loop on a friction drum needs a pretension of about half the pull and its turns walk along the drum. A drum whose halves wind and unwind together cannot slip and keeps the loop length constant.
 - **Overload limit by shear pin.** Without it a jammed box and two people heaving could put 6.4 kN into the rope. With it every part is sized on 3,000 N.
 - **Two ratchet wheels on the drum shaft.** The drum is held in either direction, even if the chain or pin fails.
-- **Return leg beside the box.** The box is 450 mm wide so the box and the return leg pass a 0.7 m door together.
+- **A box on each leg.** Two boxes 210 mm wide on lines 300 mm apart pass each other in the room and both cross the ramp in a 0.7 m door, so mud goes out on every stroke (SLH-DDR-003).
 - **Open front facing the door.** The box scoops on the way out and keeps its load against its back; it tips forward over its lip at the dump, like a Fresno scraper.
 - **Tail block on drilled floor anchors only.** No reliance on walls or door frames; a room without a sound slab is not worked with SiltHaul.
 - **Sling at drum height.** The anchor eye is 200 mm up so the rope and the sling pull in line and the capstan cannot tip.

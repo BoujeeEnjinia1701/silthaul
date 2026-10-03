@@ -8,6 +8,8 @@
 
 Drags flood mud out of homes, lanes and drains with a hand-capstan scraper instead of shovels and buckets.
 
+> CONCEPT, NOT FOR FABRICATION. SiltHaul is a TRL 3 design on paper: it has not been built or tested.
+
 ## Concept rationale
 
 Mines solved a similar job a century ago with the slusher: a scraper dragged across the floor by rope and returned by a tail rope through a sheave at the far end ([Mining History Association](https://www.mininghistoryassociation.org/Journal/MHJ-v22-2015-Reynolds.pdf)). SiltHaul is a hand-powered slusher for flooded homes. A hand capstan is anchored outside the door, a tail sheave is fixed inside the room, and a rope loop runs between them to a scraper box. Crank one way and the box drags a load of mud out through the door; crank the other way and it returns for the next.
@@ -59,7 +61,7 @@ Full design precis: [docs/02-concept.md](docs/02-concept.md) · Requirements: [d
 
 ![Concept: tail sheave block and box in the room, ramp in the doorway, hand capstan outside (layout shortened)](media/hero.png)
 
-On paper (SLH-CAL-001): two people at the cranks pull a full 40 L box with 63 N each; a shear pin caps the rope tension at about 2.5 kN; the heaviest lift is 24.7 kg. It moves about 0.32 m³ an hour with a crew of four, about a third of what the same crew moves with buckets, but nobody lifts or carries mud out of the building. Requirement R1 (twice the bucket output) is not met on paper.
+On paper (SLH-CAL-001): two boxes ride on the rope loop, so every stroke hauls a full 40 L box out while the other goes back to be filled. Two people at the cranks need 63 N each; a shear pin caps the rope tension at about 2.5 kN; the frame packs flat and the heaviest lift is 23.1 kg. It moves about 0.51 m³ an hour with a crew of four and a rest allowance, 0.57 times what the same crew moves with buckets, and nobody lifts or carries mud. Requirement R1, as Amish restated it (at least 0.5 times the bucket crew), is met on paper.
 
 ## Key components
 
@@ -67,13 +69,13 @@ On paper (SLH-CAL-001): two people at the cranks pull a full 40 L box with 63 N 
 - Outside anchor set: round sling to a tree or vehicle, four ground stakes
 - Tail sheave block: two sheaves on a floor plate held by four M12 anchors
 - Rope loop: 10 mm polyester pull rope and return rope
-- Scraper box: 450 mm wide, 40 L, open toward the door, with bridles and a tipping bar
+- Two scraper boxes: 210 mm wide, 40 L each, one on each rope, open toward the door, with bridles and a shared tipping bar
 - Doorway rope guard: threshold ramp with a crest roller
 - Stop signal and briefing card
 
 ## Building the prototype
 
-The build plan takes a capable maker from stock steel tube, plate and sheet to a working prototype in twelve illustrated steps, with a making sketch for each made part and close-ups of every joint that needs one. The capstan frame, drum, box, tail plate and ramp are welded or bolted from stock; the bearings, sprockets, chain, sheaves, anchors, rope and lifting gear are bought. It is a plan, not yet built; building and testing to it is TRL 4 work. See [docs/05-build-plan.md](docs/05-build-plan.md).
+The build plan takes a capable maker from stock steel tube, plate and sheet to a working prototype in thirteen illustrated steps, with a making sketch for each made part and close-ups of every joint that needs one. The flat-pack capstan frame, drum, two boxes, tail plate and ramp are welded or bolted from stock; the bearings, sprockets, chain, sheaves, anchors, rope and lifting gear are bought. It is a plan, not yet built; building and testing to it is TRL 4 work. See [docs/05-build-plan.md](docs/05-build-plan.md).
 
 ![Every component of the prototype, pulled apart and numbered in build order](docs/05-build-plan/overview.png)
 

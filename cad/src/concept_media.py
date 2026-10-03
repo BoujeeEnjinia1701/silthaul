@@ -23,6 +23,8 @@ X = context_shapes(P, short=True)
 
 STYLE = {  # key: (colour, exploded offset in mm)
     "frame": ("#0F766E", (0, 0, 0)),
+    "cross_members": ("#14B8A6", (0, 0, 250)),
+    "frame_bolts": ("#111827", (0, 0, 250)),
     "drum": ("#C2410C", (0, 0, 900)),
     "drum_bearings": ("#374151", (0, 0, 600)),
     "crank_bearings": ("#374151", (0, 0, 1500)),
@@ -42,6 +44,8 @@ STYLE = {  # key: (colour, exploded offset in mm)
     "anchors": ("#111827", (0, 0, 850)),
     "ropes": ("#E11D48", (0, 0, 0)),
     "box": ("#2563EB", (0, 0, 0)),
+    "box_2": ("#2563EB", (0, 0, 0)),
+    "bridles_2": ("#475569", (0, 0, 300)),
     "tip_bar": ("#1E3A8A", (0, 0, 500)),
     "bridles": ("#475569", (0, 0, 300)),
     "cheeks": ("#A16207", (0, 0, 0)),
@@ -64,18 +68,18 @@ person = human_figure(1750.0, x=L["x_cap"] + P["xc"], y=P["cap_y"] + 1000.0, z=0
 context = [Part("Wall, doorway and threshold (site)", X["wall"] + X["threshold"], "#D1D5DB"),
            Part("Tree used as the anchor (site)", X["tree"], "#A8A29E"), person]
 
-flow = {"title": "energy per 11 m haul of a full 40 L box, kJ (SLH-CAL-001 estimates)", "unit": "kJ",
-        "stages": [("Two people at the cranks", 11.1), ("Drum and rope", 10.1), ("Box moved 11 m", 10.1),
+flow = {"title": "energy per 11 m stroke: one full 40 L box out, the empty box back, kJ (SLH-CAL-001 estimates)", "unit": "kJ",
+        "stages": [("Two people at the cranks", 11.7), ("Drum and rope", 10.7), ("Both boxes moved 11 m", 10.7),
                    ("Mud delivered to the dump", "40 L, 69 kg")],
-        "losses": [(0, "Chain and bearings", 1.0), (1, "Floor friction", 6.4), (2, "Lip cutting through mud", 3.6)]}
+        "losses": [(0, "Chain and bearings", 1.0), (1, "Floor friction, full box", 6.5), (2, "Lip cutting and empty box", 4.2)]}
 
 outs = render_all(
     parts, project="SiltHaul", title="Hand-capstan mud scraper concept", dwg_no="SLH-DWG-010",
-    key_figures=["Pull 1.0 kN working; shear pin releases at about 2.5 kN",
-                 "Box 450 mm wide, 40.7 L at a 165 mm fill; about 85 kg full",
+    key_figures=["Two boxes on the loop: every stroke hauls mud out",
+                 "Boxes 210 mm wide, 40.3 L each; about 86 kg full",
                  "4:1 chain drive, two 250 mm cranks: 63 N each at 1.0 kN",
-                 "5.4 m/min loaded; about 10.6 trips and 0.43 m3 an hour",
-                 "Heaviest lift 24.7 kg; parts USD 888 (target USD 2,000)",
+                 "About 17 strokes, 0.68 m3 an hour (0.51 with rest)",
+                 "Flat-pack frame; heaviest lift 23.1 kg; parts USD 1,056",
                  "Layout shortened; on site up to 15 m tail to capstan"],
     scale_figure=False, context=context, cut=False, web_model=False, flow=flow)
 
