@@ -1,0 +1,40 @@
+# Card metadata consumed by https://designmolecule.com
+name: SiltHaul
+slug: silthaul
+repo: BoujeeEnjinia1701/silthaul         # GitHub repository, shown on every drawing and render
+area: Situational field hardware
+trl: 3                   # Technology Readiness Level, see .kit/STANDARDS.md section 9
+trl_target: 3
+design_state: constructable   # concept or constructable, see .kit/STANDARDS.md section 18
+trl_evidence:
+  - docs/01-problem.md
+  - docs/02-concept.md
+  - docs/03-requirements.md
+  - docs/decisions/0001-trl2-review-decisions.md
+  - docs/decisions/0002-design-for-construction.md
+  - docs/04-calcs/01-sizing.md
+  - docs/04-calcs/sizing.py
+  - cad/src/model.py
+  - cad/step/silthaul-assembly.step
+  - cad/step/silthaul-capstan.step
+  - cad/drawings/SLH-DWG-001.svg
+  - cad/drawings/SLH-DWG-001.pdf
+  - cad/drawings/SLH-DWG-002.svg
+  - bom/bom.csv
+  - docs/05-build-plan.md
+  - docs/06-design-decisions.md
+  - docs/05-build-plan/overview.png
+  - cad/src/build_plan_media.py
+  - cad/src/product_model.py
+shortlisted: false
+pitch: >-
+  Drags flood mud out of homes, lanes and drains with a hand-capstan scraper instead of shovels and buckets.
+problem: >-
+  After a flood, homes, lanes and drains are left full of heavy, contaminated mud, and it is cleared almost entirely by hand with shovels and buckets. The work is slow, exhausting and puts people in long contact with dirty water and silt.
+budget_usd: 2000
+difficulty: 3  # 1 easiest, 5 hardest
+hero_image: media/hero.png
+licenses:
+  hardware: CERN-OHL-S-2.0
+  software: MIT
+tags: [open-hardware, flood-recovery, disaster-response, hand-powered, capstan, situational-field-hardware]
