@@ -3,7 +3,7 @@ doc_id: SLH-CAL-001
 title: SiltHaul sizing calculations
 project: SiltHaul
 doc_type: Calculation
-version: "0.3"
+version: "0.4"
 status: Draft
 date: '2026-10-03'
 author: Amish Chadha
@@ -21,6 +21,10 @@ revisions:
   date: '2026-10-03'
   author: Amish Chadha
   change: Rerun for Amish's requirement decisions (SLH-DDR-003); second box on the return leg (two-box stroke, output against the restated R1); flat-pack frame and pack check (R9); tail block, setup, mass and cost updated
+- version: "0.4"
+  date: '2026-10-03'
+  author: Amish Chadha
+  change: "R9 restated per Amish's round-2 decision 2A (SLH-DDR-004); no numbers changed"
 ---
 
 # SiltHaul sizing calculations
@@ -123,7 +127,7 @@ Value-engineering target: USD 2,000. Estimated cost of the constructable design:
 | --- | --- | --- | --- | --- |
 | R8 | Setup time | About 20 min with three people (estimate), at the limit | 20 min or less | Not verifiable at TRL 3 |
 | R1 | Output | 0.51 m³/h against 0.90 m³/h for buckets (ratio 0.57); nobody lifts or carries mud | No lifting or carrying of mud; at least 0.5 times the bucket crew | Met on paper |
-| R9 | Portability | Heaviest lift 23.1 kg; flat-pack frame, largest piece 890 x 814 x 83 mm; kit about 454 L in a 594 L small car boot | Car boot; heaviest part 25 kg or less | Met on paper (rear seats folded) |
+| R9 | Portability | Heaviest lift 23.1 kg; flat-pack frame, largest piece 890 x 814 x 83 mm; kit about 454 L in a 594 L small car boot | Restated R9: fits a small hatchback with the rear seats folded; heaviest part 25 kg or less | Met on paper (accepted by Amish, SLH-DDR-004) |
 | R2 | Crank force | 63 N each with two at the cranks (126 N for one) at 1,000 N | 150 N or less | Met on paper |
 | R6 | Rope and anchor strength | Rope factor 18 working, 5.4 at the 3,000 N limit; chain 5.0 | At least 5 times the working pull | Met on paper |
 | R7 | Tail anchor independent of walls | Four M12 anchors in the slab, 0.45 of recommended loads at the limit | Holds on a bare concrete floor, no wall contact | Met on paper (sound slab assumed) |

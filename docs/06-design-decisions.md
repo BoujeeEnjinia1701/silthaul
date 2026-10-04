@@ -3,7 +3,7 @@ doc_id: SLH-DEC-001
 title: SiltHaul design decisions register
 project: SiltHaul
 doc_type: Design decisions register
-version: "0.2"
+version: "0.3"
 status: Draft
 date: '2026-10-03'
 author: Amish Chadha
@@ -17,6 +17,10 @@ revisions:
   date: '2026-10-03'
   author: Amish Chadha
   change: Amish's requirement decisions 2A and 7A recorded (SLH-DDR-003); boot reading for R9 opened for Amish
+- version: "0.3"
+  date: '2026-10-03'
+  author: Amish Chadha
+  change: "Open decision 1 decided (round 2, 2A) and recorded as SLH-DDR-004; no open decisions"
 ---
 
 # SiltHaul design decisions register
@@ -27,9 +31,7 @@ Every design decision still to be made, and every decision made, in one place. E
 
 ## Open decisions
 
-| # | To decide | Options | Recommendation | What it affects in the build | Source |
-| --- | --- | --- | --- | --- | --- |
-| 1 | What "fits a small car boot" in R9 means. State: with the flat-pack frame the kit packs into about 454 L, 77 % of a small hatchback's load space with the rear seats folded (1,250 x 950 x 500 mm); with the seats up the 890 x 814 mm side frames do not lie flat in a typical 950 x 650 mm boot floor. | A: accept the rear seats folded as the reference and record R9 as met on paper. B: split each side frame into bolted tubes (rails, posts, braces) so everything fits with the seats up, at about forty bolts and well over 20 min of setup (R8). | A: the seats-folded space is what a volunteer's small car offers in practice, and B breaks R8. | B would replace the side frame making sketch and add about 28 bolts and their holes | SLH-DDR-003; SLH-CAL-001, L3b and L3c |
+None. Open decision 1 (what "fits a small car boot" means) was decided by Amish on 2026-10-03: the rear seats folded; see Decisions made and SLH-DDR-004.
 
 ## To confirm when parts are bought
 
@@ -70,3 +72,4 @@ Value-engineering target: USD 2,000 (a hypothetical control target, not a limit)
 | 2026-10-03 | Appearance model additions for renders: wound rope on the drum, stakes above ground only, context wall, tree and mannequin | Amish: "I pre-approve the batch runs along with any recommendations you come up with." | docs/REVIEW.md, TRL 3 |
 | 2026-10-03 | 2A: second box on the return leg so the rope loop carries mud both ways; R1 restated as "no lifting or carrying of mud; output at least 0.5 times the same crew with shovels and buckets" (now 0.57, met on paper) | Amish: "1A 2A 3A 4A 5A 6A 7A 8A 9A 10A 11A" | SLH-DDR-003, items 1 to 5 |
 | 2026-10-03 | 7A: bolted flat-pack frame (two welded side frames, four bolted cross members) that fits a small car boot, keeping the 25 kg heaviest-part limit (heaviest lift 23.1 kg) | Amish: "1A 2A 3A 4A 5A 6A 7A 8A 9A 10A 11A" | SLH-DDR-003, items 6 to 8 |
+| 2026-10-03 | 2A (round 2): R9 accepted with the rear seats folded and restated as "fits a small hatchback with the rear seats folded; heaviest part 25 kg or less"; met on paper (heaviest lift 23.1 kg; kit about 454 L in 594 L). No design change | Amish: "i agree with all the 46 recommendations you provided. please proceed." | SLH-DDR-004 |

@@ -3,7 +3,7 @@ doc_id: SLH-BLD-001
 title: SiltHaul prototype build plan
 project: SiltHaul
 doc_type: Build plan
-version: "0.2"
+version: "0.3"
 status: Draft
 date: '2026-10-03'
 author: Amish Chadha
@@ -17,6 +17,10 @@ revisions:
   date: '2026-10-03'
   author: Amish Chadha
   change: Second scraper box on the return rope and a bolted flat-pack frame (SLH-DDR-003, Amish's decisions 2A and 7A); steps renumbered
+- version: "0.3"
+  date: '2026-10-03'
+  author: Amish Chadha
+  change: "Pack check worded to R9 as restated by Amish (SLH-DDR-004); no design change"
 ---
 
 # SiltHaul prototype build plan
@@ -408,7 +412,7 @@ These are listed here and recorded in a TRL 4 test report, not in this plan.
 | Box capacity | R3 | Fill each box with 40 L of water, front boarded | Level about 245 mm |
 | Haul trial | R1, R5 | Full length with both boxes, timed against a bucket crew of the same four people | SiltHaul moves at least half as much; nobody lifts or carries mud |
 | Setup | R8 | Three people, timed | 20 min or less |
-| Mass and packing | R9 | Weigh each lift; take the frame apart and pack the whole kit into a small hatchback | Each 25 kg or less; the kit fits with the rear seats folded |
+| Mass and packing | R9 | Weigh each lift; take the frame apart and pack the whole kit into a small hatchback | Each 25 kg or less; the kit fits a small hatchback with the rear seats folded (R9 as restated) |
 
 ## 6. Safety stops
 

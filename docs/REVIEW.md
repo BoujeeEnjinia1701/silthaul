@@ -1,5 +1,33 @@
 # Review note: SiltHaul
 
+## 2026-10-03: Amish's round-2 requirement decisions carried out
+
+Amish, 2026-10-03: "i agree with all the 46 recommendations you provided. please proceed." For SiltHaul this is decision 2A on R9, recorded in `docs/decisions/0004-r9-rear-seats-folded.md` (SLH-DDR-004) and in the register `docs/06-design-decisions.md` (SLH-DEC-001 v0.3). A records and wording change only: no geometry, bill of materials, drawings or pictures changed.
+
+| Change | Files | New result |
+| --- | --- | --- |
+| R9 accepted with the rear seats folded and restated as "fits a small hatchback with the rear seats folded; heaviest part 25 kg or less" | `docs/03-requirements.md` v0.5, `docs/04-calcs/01-sizing.md` v0.4 (wording), `docs/05-build-plan.md` v0.3 (pack check wording) | **R9 met on paper:** heaviest lift 23.1 kg against 25 kg; kit about 454 L packed against 594 L |
+| Open decision 1 closed | `docs/06-design-decisions.md` v0.3, `docs/decisions/0004-r9-rear-seats-folded.md` | Open decisions: none |
+| Cost | unchanged | Value-engineering target: USD 2,000. Estimated cost of the constructable design: USD 1,055.60 (USD 944.40 under the target). `budget_usd` unchanged |
+
+Mass unchanged. Pictures changed: none. Appearance model unchanged, so the photoreal renders stand and no views were re-exported.
+
+### Decisions proposed, awaiting Amish
+
+None.
+
+### Cross-repo actions
+
+None.
+
+### Safety
+
+Packing the heavy parts into a car is a manual-handling task: no lift is above 25 kg and two people share the drum with bearings. The rope and anchor safety stops of the build plan are unchanged.
+
+### Recommended next step
+
+TRL 4 (proof loads, the shear pin test, the timed R1 and R8 trials and the pack test) needs a new instruction from Amish.
+
 ## 2026-10-03: Amish's requirement decisions carried out
 
 Amish, 2026-10-03, on every requirement decision put to him: "1A 2A 3A 4A 5A 6A 7A 8A 9A 10A 11A". For SiltHaul that is 2A (R1) and 7A (R9), recorded in `docs/decisions/0003-amish-requirement-decisions.md` (SLH-DDR-003) and in `docs/06-design-decisions.md` (SLH-DEC-001 v0.2). No commit or push in this session; Amish pushes.
