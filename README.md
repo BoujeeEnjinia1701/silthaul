@@ -2,9 +2,9 @@
 
 ![SiltHaul: hand-capstan scraper that drags flood mud out of homes](media/render-hero.png)
 
-![TRL 3](https://img.shields.io/badge/TRL-3%20of%209-0F766E) ![Hardware: CERN-OHL-S-2.0](https://img.shields.io/badge/hardware-CERN--OHL--S--2.0-111827) ![Software: MIT](https://img.shields.io/badge/software-MIT-111827) [![REUSE compliant](https://github.com/BoujeeEnjinia1701/silthaul/actions/workflows/reuse.yml/badge.svg)](https://github.com/BoujeeEnjinia1701/silthaul/actions/workflows/reuse.yml) [![Archived in Software Heritage](https://archive.softwareheritage.org/badge/origin/https://github.com/BoujeeEnjinia1701/silthaul/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/BoujeeEnjinia1701/silthaul) [![DOI](https://zenodo.org/badge/{"message":"GitHub access to this repository is not enabled for this session. Use add_repo to request access. If add_repo answers that read access is already available and you need GitHub API or write access, call add_repo again with access:\"push\" to attach the repository with credentials.","documentation_url":"https://docs.anthropic.com/en/docs/claude-code/github-actions"}.svg)](https://zenodo.org/badge/latestdoi/{"message":"GitHub access to this repository is not enabled for this session. Use add_repo to request access. If add_repo answers that read access is already available and you need GitHub API or write access, call add_repo again with access:\"push\" to attach the repository with credentials.","documentation_url":"https://docs.anthropic.com/en/docs/claude-code/github-actions"})
+![TRL 3](https://img.shields.io/badge/TRL-3%20of%209-0F766E) ![Stage P3](https://img.shields.io/badge/stage-P3%20design%20outputs-0F766E) ![Hardware: CERN-OHL-S-2.0](https://img.shields.io/badge/hardware-CERN--OHL--S--2.0-111827) ![Software: MIT](https://img.shields.io/badge/software-MIT-111827) [![REUSE compliant](https://github.com/BoujeeEnjinia1701/silthaul/actions/workflows/reuse.yml/badge.svg)](https://github.com/BoujeeEnjinia1701/silthaul/actions/workflows/reuse.yml) [![Archived in Software Heritage](https://archive.softwareheritage.org/badge/origin/https://github.com/BoujeeEnjinia1701/silthaul/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/BoujeeEnjinia1701/silthaul) [![DOI](https://zenodo.org/badge/{"message":"GitHub access to this repository is not enabled for this session. Use add_repo to request access. If add_repo answers that read access is already available and you need GitHub API or write access, call add_repo again with access:\"push\" to attach the repository with credentials.","documentation_url":"https://docs.anthropic.com/en/docs/claude-code/github-actions"}.svg)](https://zenodo.org/badge/latestdoi/{"message":"GitHub access to this repository is not enabled for this session. Use add_repo to request access. If add_repo answers that read access is already available and you need GitHub API or write access, call add_repo again with access:\"push\" to attach the repository with credentials.","documentation_url":"https://docs.anthropic.com/en/docs/claude-code/github-actions"})
 
-**Area:** Situational field hardware · **TRL:** 3 of 9 (proof of concept on paper; constructable design) · **Value-engineering target:** USD 2,000; estimated parts cost USD 887.50 · **Difficulty:** 3 of 5
+**Area:** Situational field hardware · **TRL:** 3 of 9 (proof of concept on paper; constructable design) · **Value-engineering target:** USD 2,000; estimated parts cost USD 1,055.60 · **Difficulty:** 3 of 5
 
 Drags flood mud out of homes, lanes and drains with a hand-capstan scraper instead of shovels and buckets.
 
@@ -61,7 +61,15 @@ Full design precis: [docs/02-concept.md](docs/02-concept.md) · Requirements: [d
 
 ![Concept: tail sheave block and box in the room, ramp in the doorway, hand capstan outside (layout shortened)](media/hero.png)
 
-On paper (SLH-CAL-001): two boxes ride on the rope loop, so every stroke hauls a full 40 L box out while the other goes back to be filled. Two people at the cranks need 63 N each; a shear pin caps the rope tension at about 2.5 kN; the frame packs flat and the heaviest lift is 23.1 kg. It moves about 0.51 m³ an hour with a crew of four and a rest allowance, 0.57 times what the same crew moves with buckets, and nobody lifts or carries mud. Requirement R1, as Amish restated it (at least 0.5 times the bucket crew), is met on paper.
+On paper (SLH-CAL-001): two boxes ride on the rope loop, so every stroke hauls a full 40 L box out while the other goes back to be filled. Two people at the cranks need 63 N each; a shear pin caps the rope tension at about 2.5 kN (3,000 N limit); the frame packs flat and the heaviest lift is 22.2 kg. It moves about 0.51 m³ an hour with a crew of four and a rest allowance, 0.57 times what the same crew moves with buckets, and nobody lifts or carries mud. Requirement R1, as Amish restated it (at least 0.5 times the bucket crew), is met on paper but at risk: the ratio falls to 0.497 if the loaders fill at a shoveller's rate. The chain factor at the overload limit is 4.9 against the 5 asked for (see STEM check).
+
+## STEM check
+
+Twenty-six claims are checked (SLH-STM-001): twelve are within known science, thirteen need field data at TRL 4 (traction on wet mud, hose flow of thinned mud, hand-hauling speed and similar), so the check stays open. Two details failed along the way and were fixed under Amish's standing instruction: the hand-hauled box (option B) needed staked foot boards, and the slurry pump (option C) could not take a 120 mm diaphragm stroke, so the stroke is 40 mm. One finding goes to Amish: the roller chain factor at the 3,000 N overload limit is 4.93, just under 5, and three fixes are proposed (a 3.5 mm shear pin, duplex chain, or accept). An independent reviewer tried to refute every verdict; its findings are in [docs/01b-stem-check.md](docs/01b-stem-check.md).
+
+## Concept options
+
+Three working principles are modelled at the same level of detail (SLH-OPT-001, [docs/02a-concept-options.md](docs/02a-concept-options.md)): A, the hand-capstan loop (score 126 of 160); B, a crew-hauled box on a rope from staked foot boards (133); and C, a hand-pumped slurry line (96). A and B are within 10 %, so both go to Amish; no choice is made here ([docs/decisions/0005-concept-selection.md](docs/decisions/0005-concept-selection.md)). The options picture is not yet rendered (it needs `python .kit/options.py`, which this upgrade was told not to run).
 
 ## Key components
 
@@ -112,6 +120,8 @@ The build plan takes a capable maker from stock steel tube, plate and sheet to a
 | `build-log/` | Dated prototyping notes |
 
 ## Documentation
+
+Pipeline documents: [URS](docs/03a-user-requirements.md) · [PRS](docs/03-requirements.md) · [RTM](docs/03b-traceability.md) · [STM](docs/01b-stem-check.md) · [OPT](docs/02a-concept-options.md) · [REG](docs/07-regulatory.md) · [FEA](docs/08-feasibility.md) · [RSK](docs/09-risk.md) · [MKT](docs/10-market.md) · [PLN](docs/11-plan.md). Run `python .kit/cad_check.py --export` for the CAD fidelity check and `python docs/04-calcs/sizing.py` for the calculations.
 
 Controlled documents follow the portfolio [documentation standard](.kit/STANDARDS.md). Each carries a document ID (SLH-PRC-001 for the precis), a version and a revision history. Branded PDFs are built with `python .kit/render.py` and attached to GitHub Releases when a document is tagged, for example `SLH-PRC-001/v1.0`.
 

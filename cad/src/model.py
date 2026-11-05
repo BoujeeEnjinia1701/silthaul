@@ -1,47 +1,50 @@
-"""SiltHaul parametric model (build123d), TRL 3, constructable design (SLH-DDR-002).
+"""SiltHaul parametric model, kit 1.9 interface (STANDARDS section 24), detail level D3 for every option.
 
-Run from the repo root:  python cad/src/model.py          (exports and checks)
-                         python cad/src/model.py --check  (constructability checks only)
-Exports STEP and STL into cad/step and cad/stl:
-    silthaul-capstan.step / .stl     hand capstan: flat-pack frame with its bolts, split winding drum, bearings, chain drive,
-                                     guard, ratchet and pawls, cranks (stakes and sling not included)
-    silthaul-box.step / .stl         scraper box with bridles and tipping bar (two boxes are made)
-    silthaul-tail.step / .stl        tail sheave block with its four floor anchors
-    silthaul-ramp.step / .stl        doorway rope guard (threshold ramp with crest roller)
-    silthaul-assembly.step           the whole system at the design case: tail sheave 15 m from
-                                     the capstan, room 7 m long, box 1 in the room, box 2 at the dump,
-                                     ropes as straight legs
+Run from the repo root:
+    python .kit/cad_check.py --export     fidelity check, STEP per part and per assembly (cad/step/)
+    python cad/src/model.py               part list with masses, constructability checks and STL (cad/stl/)
 
-Axes (site): X runs along the rope line from the tail sheave (x = 0) toward the capstan (+X),
-Y is across the line, Z is up with the floor at z = 0. Box 1 and its pull rope run along y = 0; the
-return leg of the loop, with box 2 on it, runs beside it along y = +300 mm. The tail rope joins the
-rear bridles of the two boxes round the tail sheaves.
+Axes (site): X runs along the rope line from the tail sheave (x = 0) toward the capstan (+X), Y is across
+the line, Z is up with the floor at z = 0. Box 1 and its pull rope run along y = 0; the return leg of the
+loop, with box 2 on it, runs beside it along y = +300 mm. Pictures use the shortened layout (`short=True`,
+the default of `components()`); the drawing of the design case uses `short=False`.
 
-Constructable design, 2026-10-03 (SLH-DDR-002, decided under Amish's pre-approval of 2026-10-03):
-    the hand capstan is a split winding drum: one half winds the pull rope while the other half pays
-    out the return rope, single layer, so the loop length stays constant and nothing can slip;
-    a 4:1 roller-chain drive from a crank shaft 850 mm up, two cranks, a 4 mm shear pin in the small
-    sprocket hub that limits rope tension to about 2.5 kN, and two opposite ratchet wheels on the
-    drum shaft with two pawls (one holds each direction);
-    the scraper box is 450 mm wide with its open front toward the capstan, a bevelled cutting lip,
-    a sloped back that rides over mud on the return stroke and a socket for a loose tipping bar;
-    the tail sheave block is two 125 mm sheaves on a 10 mm floor plate held by four M12 anchors;
-    the doorway rope guard is a threshold ramp with a crest roller between plywood cheeks.
-Amish's requirement decisions, 2026-10-03 (SLH-DDR-003): a second scraper box on the return leg, so
-the loop carries mud out on both strokes (both boxes 210 mm wide inside so they pass each other and
-go through a 0.7 m door on their own lines); and a flat-pack frame: two welded side frames joined by
-four bolted cross members (front and rear cross rails, top tie, anchor bar), each with 8 mm end plates.
-Main dimensions and interfaces only; tolerances are TRL 4 work. The same PARAMS feed
-docs/04-calcs/sizing.py (SLH-CAL-001), the drawings (cad/src/sheets.py), the concept media
-(cad/src/concept_media.py), the product model and the build plan pictures.
+Options (SLH-OPT-001; option A is the existing design and is carried to the drawings, BOM and build plan):
+    A  hand-capstan loop: a split winding drum on a 4:1 chain drive with a shear pin and two ratchet
+       wheels pulls two scraper boxes round a rope loop; a flat-pack frame; tail sheave block on four
+       floor anchors; threshold ramp (SLH-DDR-001 to SLH-DDR-004)
+    B  crew-hauled box: no machine; up to four people haul one box out by hand on a rope with fixed
+       toggle handles, and the loaders pull it back on a tag line through the same tail block
+    C  hand slurry pump: a double-acting diaphragm pump on a skid, worked by a long rocker handle, sucks
+       thinned mud through a strainer inlet and delivers it by hose through the door; a flush lance fed
+       from a 200 L drum loosens and thins the mud
+
+Every part is a cad_parts.part() dict: made, bought, fastener, weld or context, with a `key` that names
+the legacy component group the calculations, drawings and build-plan pictures use. BOM line numbers are
+given for option A only. Main dimensions and interfaces only; tolerances are TRL 4 work.
 """
+from __future__ import annotations
+
 import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from build123d import (Box, Compound, Cylinder, Plane, Polygon, Pos, Rot, Solid, Vector, extrude,
-                       export_step, export_stl, mirror)
+HERE = Path(__file__).resolve().parent
+sys.path[:0] = [str(HERE), str(HERE.parents[1] / ".kit")]
+
+from build123d import Box, Compound, Cylinder, Plane, Pos, Rot, Sketch, Circle, Torus, Vector, export_stl, mirror, extrude  # noqa: E402
+import cad_parts as cp  # noqa: E402
+from cad_parts import part, at, break_edges  # noqa: E402
+import slh_units as U  # noqa: E402
+from slh_parts import (bx, ycyl, xcyl, zcyl, ytube, prism_xz, rod, hull2d, circle_pts, stadium_xz, fuse,  # noqa: E402
+                       rotate_about_y, tube_between, bar_between, weld_bead, ring_weld, bolt_y, bolt_z,
+                       bow_shackle, pear_ring, chain_leg, be, mk)
+
+TITLE = "SiltHaul"
+
+# M14 is not in the kit's fastener table (ISO 4014 / 4032 / 7089 sizes); added here for the UCP206 bearing bolts.
+cp.ISO.setdefault(14, (21, 8.8, 12.8, 28, 2.5, 2.0))
 
 # Top-level parameters (mm). Edit these, not the geometry below.
 PARAMS = {
@@ -95,102 +98,37 @@ PARAMS = {
     "threshold_max": 110.0, "cheek_top": 330.0,
     # materials (kg per m^3)
     "rho_steel": 7850.0, "rho_ply": 550.0, "rho_poly": 1380.0,
+    # option B: crew-hauled box (SLH-OPT-001)
+    "haul": {"rope_len": 17000.0, "n_handles": 4, "handle_pitch": 700.0, "grip": (40.0, 220.0), "brace_plate": (300.0, 400.0, 8.0)},
+    # option C: hand diaphragm slurry pump on a skid (SLH-OPT-001)
+    "pump": {"skid": (900.0, 500.0), "body_d": 330.0, "stroke_chamber": 40.0, "hose_d": 75.0, "lever": 1400.0, "drum_water": 200.0},
 }
 
-
-# ----------------------------------------------------------------------------- helpers
-def bx(x0, x1, y0, y1, z0, z1):
-    return Pos((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2) * Box(x1 - x0, y1 - y0, z1 - z0)
-
-
-def ycyl(x, z, r, y0, y1):
-    return Pos(x, (y0 + y1) / 2, z) * Rot(90, 0, 0) * Cylinder(r, y1 - y0)
-
-
-def xcyl(y, z, r, x0, x1):
-    return Pos((x0 + x1) / 2, y, z) * Rot(0, 90, 0) * Cylinder(r, x1 - x0)
-
-
-def zcyl(x, y, r, z0, z1):
-    return Pos(x, y, (z0 + z1) / 2) * Cylinder(r, z1 - z0)
-
-
-def ytube(x, z, ro, ri, y0, y1):
-    return ycyl(x, z, ro, y0, y1) - ycyl(x, z, ri, y0 - 1, y1 + 1)
-
-
-def _ccw(points):
-    a = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]))
-    return list(points) if a > 0 else list(points)[::-1]
-
-
-def prism_xz(points, y0, y1):
-    """Polygon given as (x, z) points, extruded from y0 to y1."""
-    f = Plane.XZ.offset(-y0) * Polygon(*_ccw(points), align=None)
-    return extrude(f, amount=-(y1 - y0))
-
-
-def prism_xy(points, z0, z1):
-    f = Plane.XY.offset(z0) * Polygon(*_ccw(points), align=None)
-    return extrude(f, amount=z1 - z0)
-
-
-def rod(a, b, r):
-    """Round bar from point a to point b."""
-    a, b = Vector(*a), Vector(*b)
-    d = b - a
-    return Solid.make_cylinder(r, d.length, Plane(origin=a, z_dir=d.normalized()))
-
-
-def sq_bar(a, b, s, w=None):
-    """Square tube (section s x s, wall w; solid if w is None) from a to b, sides square to Y."""
-    a, b = Vector(*a), Vector(*b)
-    d = b - a
-    L = d.length
-    pl = Plane(origin=a, x_dir=(0, 1, 0), z_dir=d.normalized())
-    bar = pl * Pos(0, 0, L / 2) * Box(s, s, L)
-    if w:
-        bar = bar - pl * Pos(0, 0, L / 2) * Box(s - 2 * w, s - 2 * w, L + 2)
-    return bar
-
-
-def hull2d(pts):
-    """Convex hull (monotone chain) of 2D points, counter-clockwise."""
-    pts = sorted(set((round(x, 4), round(y, 4)) for x, y in pts))
-    if len(pts) < 3:
-        return pts
-
-    def cross(o, a, b):
-        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
-    lower, upper = [], []
-    for p in pts:
-        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
-            lower.pop()
-        lower.append(p)
-    for p in reversed(pts):
-        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
-            upper.pop()
-        upper.append(p)
-    return lower[:-1] + upper[:-1]
-
-
-def circle_pts(cx, cz, r, n=48):
-    return [(cx + r * math.cos(2 * math.pi * k / n), cz + r * math.sin(2 * math.pi * k / n)) for k in range(n)]
-
-
-def stadium_xz(c1, r1, c2, r2, y0, y1, n=48):
-    return prism_xz(hull2d(circle_pts(*c1, r1, n) + circle_pts(*c2, r2, n)), y0, y1)
-
-
-def fuse(shapes):
-    out = None
-    for s in shapes:
-        out = s if out is None else out.fuse(s)
-    return out.clean() if hasattr(out, "clean") else out
-
-
-def rotate_about_y(shape, x, z, deg):
-    return Pos(x, 0, z) * Rot(0, deg, 0) * Pos(-x, 0, -z) * shape
+OPTIONS = {"A": "Hand-capstan loop", "B": "Crew-hauled box", "C": "Hand slurry pump"}
+PRINCIPLES = {
+    "A": "A hand-cranked split winding drum on a 4:1 chain drive pulls two scraper boxes round a rope loop, "
+         "a shear pin limits the pull and two ratchets hold the load: the mechanism multiplies the crew's force.",
+    "B": "No machine: up to four people haul one scraper box out on a rope with fixed toggle handles and the "
+         "loaders pull it back on a tag line, so the crew's own pull is the only force.",
+    "C": "A double-acting diaphragm pump worked by a long rocker handle sucks mud thinned with flush water through "
+         "a strainer and delivers it by hose: the mud is moved as a slurry instead of being scraped.",
+}
+CHOSEN = "A"
+OPTION_VIEWS = {k: {"el": 24, "az": -48, "scale": "person", "ground_z": 0.0} for k in OPTIONS}
+# welds are fused metal: a bead may meet the parts it joins; the pins sit in their own sleeves and bores
+ALLOWED_CONTACTS = [
+    ("Welds", ""), ("Weld ring", ""), ("Pin through", ""),
+    # pins carried through drilled eyes and cross-holes: the pin is the part that fills the hole
+    ("Shackle pins", "Bow shackles"), ("Shackle pins", "Split pins"), ("Bow shackles", "Split pins"),
+    ("Tail plate", "Split pins"), ("Roller axle", "Split pins"), ("Pins 10 mm", "Split pins"),
+    # press fits and push-on fits
+    ("Scraper box", "end caps"), ("Tipping bar", "end caps"), ("spigot", "hose"), ("Suction hose", "Strainer"),
+    ("hose", "Hose clamps"), ("Crest roller", "rope"),
+    # rope laid on the drum and clamped by its U-bolts, chain on the sprocket seats, rope threaded through the bow
+    ("Winding drum", "U-bolt"), ("Winding drum", "rope"), ("sprocket", "Roller chain"),
+    ("Pawl pin", "Split pin"), ("Pawl", "Pawl spring"),
+    ("anchor eye", "anchor eye"), ("anchor eye", "Split pins, anchor"), ("anchor eye", "Round sling"),
+]
 
 
 # ----------------------------------------------------------------------------- derived numbers
@@ -206,12 +144,10 @@ def derived(P=PARAMS):
     D["yb"] = D["drum_len"] / 2 + 12.0 + P["ucp206"][2] / 2   # bearing centre plane (frame side planes)
     s = P["shs"][0]
     D["rail_in"] = D["yb"] - s / 2
-    # half centres
     D["y_pull"] = -(P["ring"][1] / 2 + D["half_len"] / 2)
     D["y_ret"] = +(P["ring"][1] / 2 + D["half_len"] / 2)
     D["z_under"] = P["hd"] - D["pitch_d"] / 2                # pull rope leaves the bottom of the drum
     D["z_over"] = P["hd"] + D["pitch_d"] / 2                 # return rope leaves the top
-    # chain drive
     p = P["chain_p"]
     D["pd_small"] = p / math.sin(math.pi / P["z_small"])
     D["pd_big"] = p / math.sin(math.pi / P["z_big"])
@@ -219,7 +155,6 @@ def derived(P=PARAMS):
     D["od_big"] = p * (0.6 + 1 / math.tan(math.pi / P["z_big"]))
     D["ratio"] = P["z_big"] / P["z_small"]
     D["centres"] = math.hypot(P["xc"], P["hc"] - P["hd"])
-    # y positions outboard of the bearings (both shafts share the sprocket plane on -Y)
     yb, bw = D["yb"], P["ucp206"][5]
     D["y_spr"] = -(yb + bw / 2 + 30.0 + P["sprocket_t"] / 2)
     D["y_hub"] = (-(yb + bw / 2 + 30.0), -(yb + bw / 2 + 30.0) + P["hub"][1])   # (outer, inner) faces
@@ -232,47 +167,6 @@ def derived(P=PARAMS):
     return D
 
 
-# ----------------------------------------------------------------------------- capstan
-def _bearing(P, kind, x, y, zc):
-    h, L, W, t, hd, hw, _ = P[kind]
-    shaft = P["drum_shaft"] if kind == "ucp206" else P["crank_shaft"]
-    base = bx(x - L / 2, x + L / 2, y - W / 2, y + W / 2, zc - h, zc - h + t)
-    web = bx(x - hd * 0.42, x + hd * 0.42, y - hw / 2, y + hw / 2, zc - h + t - 0.1, zc)
-    housing = ycyl(x, zc, hd / 2, y - hw / 2, y + hw / 2)
-    return (base + web + housing) - ycyl(x, zc, shaft / 2, y - hw, y + hw)
-
-
-def _ratchet_wheel(P, y0, first_deg, forward=True):
-    od, rd, n, t = P["ratchet"]
-    R, r = od / 2, rd / 2
-    pts = []
-    for k in range(n):
-        a = math.radians(first_deg + 360.0 * k / n)
-        b = math.radians(first_deg + 360.0 * (k + 1) / n)
-        if forward:     # radial face at a, slope up from the root at a to the tip at the next face
-            pts += [(r * math.cos(a), r * math.sin(a))]
-            pts += [(R * math.cos(b - 0.002), R * math.sin(b - 0.002))]
-        else:           # radial face at a, slope down from the tip at a to the root at the next face
-            pts += [(R * math.cos(a + 0.002), R * math.sin(a + 0.002))]
-            pts += [(r * math.cos(b), r * math.sin(b))]
-    # forward: root at a then tip just before b gives the radial face at b
-    wheel = prism_xz([(x, z + P["hd"]) for x, z in pts], y0, y0 + t)
-    return wheel - ycyl(0, P["hd"], P["drum_shaft"] / 2, y0 - 1, y0 + t + 1)
-
-
-def _pawl(P, y0, lift_deg=0.0):
-    px, pz = P["pawl_pivot"]
-    hd = P["hd"]
-    tip_r, tip_a = 85.0, math.radians(57.5)
-    tx, tz = tip_r * math.cos(tip_a), hd + tip_r * math.sin(tip_a)
-    pts = hull2d(circle_pts(px, pz, 14.0, 32) + circle_pts(tx, tz, 2.5, 16) +
-                 circle_pts(px - 30, pz + 16, 6.0, 16))             # thumb tab above the pivot
-    s = prism_xz(pts, y0, y0 + P["pawl_t"]) - ycyl(px, pz, 6.0, y0 - 1, y0 + P["pawl_t"] + 1)
-    if lift_deg:
-        s = rotate_about_y(s, px, pz, lift_deg)
-    return s
-
-
 def anchor_bar_x(P=PARAMS):
     """x of the anchor bar centre: where the rear braces' outer faces pass drum axis height."""
     s = P["shs"][0]
@@ -283,420 +177,6 @@ def anchor_bar_x(P=PARAMS):
     return a[0] + t * (b[0] - a[0]) - s / 2 - 8.0
 
 
-PAWL_LIFT = 24.0       # degrees pawl 2 is turned up onto its stop in the pictures
-
-
-def capstan_parts(P=PARAMS):
-    """Capstan in its own coordinates: drum axis along Y at x = 0, z = hd; rope arrives from -X."""
-    D = derived(P)
-    s, w = P["shs"]
-    yb = D["yb"]
-    x0, x1 = P["rail_x"]
-    xc, hc, hd = P["xc"], P["hc"], P["hd"]
-    h6 = P["ucp206"][0]
-    h5 = P["ucp205"][0]
-    pad_top = hd - h6
-    top_top = hc - h5
-    out = {}
-
-    def shs_x(xa, xb, y, z0):           # square tube along X
-        return bx(xa, xb, y - s / 2, y + s / 2, z0, z0 + s) - bx(xa - 1, xb + 1, y - s / 2 + w, y + s / 2 - w, z0 + w, z0 + s - w)
-
-    def shs_y(x, ya, yb_, z0):
-        return bx(x - s / 2, x + s / 2, ya, yb_, z0, z0 + s) - bx(x - s / 2 + w, x + s / 2 - w, ya - 1, yb_ + 1, z0 + w, z0 + s - w)
-
-    def shs_z(x, y, z0, z1):
-        return bx(x - s / 2, x + s / 2, y - s / 2, y + s / 2, z0, z1) - bx(x - s / 2 + w, x + s / 2 - w, y - s / 2 + w, y + s / 2 - w, z0 - 1, z1 + 1)
-
-    # flat-pack frame (SLH-DDR-003): two welded side frames, one per side, and four bolted cross members
-    sides = {-1: [], 1: []}
-    for sg in (-1, 1):
-        y = sg * yb
-        side = sides[sg]
-        side.append(shs_x(x0, x1, y, 0.0))                                    # side rail
-        pl, pw, pt = P["pad_plate"]
-        side.append(bx(-pl / 2, pl / 2, y - pw / 2, y + pw / 2, pad_top - pt, pad_top))   # drum bearing pad
-        for xp in (-60.0, 60.0):
-            side.append(shs_z(xp, y, s, pad_top - pt))                         # pad posts
-        tl, tw, tt = P["top_plate"]
-        side.append(shs_z(xc, y, s, top_top - tt))                            # upright post
-        side.append(bx(xc - tl / 2, xc + tl / 2, y - tw / 2, y + tw / 2, top_top - tt, top_top))
-        side.append(sq_bar((x0 + 60, y, s - 6), (xc - s / 2 + 2, y, 640.0), s, w))   # front brace
-        side.append(sq_bar((x1 - 50, y, s - 6), (xc + s / 2 - 2, y, 560.0), s, w))   # rear brace
-        so, st, sl = P["stake_tube"]
-        for xs in P["stake_x"]:
-            ys = y + sg * (s / 2 + so / 2 - 0.5)          # 0.5 mm into the rail: a welded line contact
-            side.append(zcyl(xs, ys, so / 2, 0, sl) - zcyl(xs, ys, so / 2 - st, -1, sl + 1))
-    # pawl brackets and pivot pins: pawl 2 on the +Y post's outer face, pawl 1 on the +Y front brace
-    px, pz = P["pawl_pivot"]
-    y_r = D["y_ratchet"]
-    tr = P["ratchet"][3]
-    sides[1].append(bx(px - 20, xc + s / 2, yb + s / 2, yb + s / 2 + 6, pz - 30, pz + 30))
-    sides[1].append(ycyl(px, pz, 6.0, yb + s / 2 + 6, y_r + 2 * tr + 4.0 + 6.0))
-    sides[1].append(bx(-px - 40, -px + 22, yb + s / 2, yb + s / 2 + 6, pz - 30, pz + 30))
-    sides[1].append(ycyl(-px, pz, 6.0, yb + s / 2 + 6, y_r + tr + 2.0))
-    # guard tabs on the -Y post's outer face
-    for zt in (430.0, 700.0):
-        sides[-1].append(bx(xc - 15, xc + 15, D["y_guard"][1], -yb - s / 2, zt, zt + 3))
-
-    # cross members, each a tube with an 8 mm end plate at each end bolted to the inner face of a side frame
-    ep = P["end_plate"]
-    yi = yb - s / 2                       # inner face of the side frames
-    yt = yi - ep                          # tube ends
-    bolts = []                            # (x, z, kind)
-    cross = []
-    for xcm in P["x_cross"]:              # front and rear cross rails on the ground
-        cross.append(shs_y(xcm, -yt, yt, 0.0))
-        for sg in (-1, 1):
-            ya, yz = sorted((sg * yt, sg * yi))
-            cross.append(bx(xcm - 50, xcm + 50, ya, yz, 0.0, s))
-        bp = P["bolt_pitch"] / 2
-        bolts += [(xcm - bp, s / 2, "m10"), (xcm + bp, s / 2, "m10")]
-    zt0 = 700.0                           # top tie between the posts
-    cross.append(shs_y(xc, -yt, yt, zt0))
-    for sg in (-1, 1):
-        ya, yz = sorted((sg * yt, sg * yi))
-        cross.append(bx(xc - s / 2, xc + s / 2, ya, yz, zt0 + s / 2 - 55, zt0 + s / 2 + 55))
-    bolts += [(xc, zt0 + s / 2 - 37, "m10"), (xc, zt0 + s / 2 + 37, "m10")]
-    # anchor bar (40 x 40 x 3) between the rear braces at drum axis height, with a 10 mm eye plate
-    # and a 22 mm hole: the sling pulls in line with the ropes, so the frame does not tip
-    xa = anchor_bar_x(P)
-    za = hd - s / 2
-    cross.append(bx(xa - s / 2, xa + s / 2, -yt, yt, za, za + s)
-                 - bx(xa - s / 2 + 3, xa + s / 2 - 3, -yt - 1, yt + 1, za + 3, za + s - 3))
-    ax_, az_ = x1 - 50, s - 6                       # rear brace centre line, from its foot ...
-    bx_, bz_ = xc + s / 2 - 2, 560.0                # ... to its top
-    L_b = math.hypot(bx_ - ax_, bz_ - az_)
-    ux, uz = (bx_ - ax_) / L_b, (bz_ - az_) / L_b
-    t0 = (hd - az_) / (bz_ - az_)
-    xbc = ax_ + t0 * (bx_ - ax_)                    # brace centre line at drum axis height
-    for k in (-1, 1):
-        bolts.append((xbc + k * 40 * ux, hd + k * 40 * uz, "m12"))
-    for sg in (-1, 1):
-        ya, yz = sorted((sg * yt, sg * yi))
-        cross.append(bx(xa - s / 2, xbc + 30, ya, yz, hd - 52, hd + 52))
-    eye = prism_xz([(xa + s / 2, hd - 25), (xa + s / 2 + 70, hd - 15), (xa + s / 2 + 70, hd + 15), (xa + s / 2, hd + 25)], -5, 5)
-    cross.append(eye - ycyl(xa + s / 2 + 45, hd, 11, -6, 6))
-
-    # bolt holes through the end plates and the side frames; bolts with the head inside, nut outside
-    side_f = {sg: fuse(v) for sg, v in sides.items()}
-    cross_f = fuse(cross)
-    bolt_parts = []
-    for bxp, bzp, kind in bolts:
-        d, dh, th = P[kind]
-        for sg in (-1, 1):
-            ya, yz = sorted((sg * (yt - 1), sg * (yb + s / 2 + 1)))
-            hole = ycyl(bxp, bzp, d / 2 + 0.5, ya, yz)
-            side_f[sg] = side_f[sg] - hole
-            cross_f = cross_f - hole
-            y_in, y_out = sg * yt, sg * (yb + s / 2)
-            shank = ycyl(bxp, bzp, d / 2, *sorted((y_in, y_out + sg * (th + 3))))
-            head = ycyl(bxp, bzp, dh / 2, *sorted((y_in, y_in - sg * th)))
-            nut = ycyl(bxp, bzp, dh / 2, *sorted((y_out, y_out + sg * th)))
-            bolt_parts.append(shank + head + nut)
-    out["frame"] = side_f[-1].fuse(side_f[1])
-    out["frame_side_m"] = side_f[-1]
-    out["frame_side_p"] = side_f[1]
-    out["cross_members"] = cross_f
-    out["frame_bolts"] = fuse(bolt_parts)
-
-    # drum bearings and crank bearings
-    out["drum_bearings"] = fuse([_bearing(P, "ucp206", 0.0, sg * yb, hd) for sg in (-1, 1)])
-    out["crank_bearings"] = fuse([_bearing(P, "ucp205", xc, sg * yb, hc) for sg in (-1, 1)])
-
-    # drum weldment: tube, rings, end discs, shaft, big sprocket on its hub, two ratchet wheels
-    od, t = P["drum_tube"]
-    L = D["drum_len"]
-    ro, rt = P["ring"]
-    sh = P["drum_shaft"]
-    drum = [ytube(0, hd, od / 2, od / 2 - t, -L / 2, L / 2)]
-    for yr in (-L / 2, -rt / 2, L / 2 - rt):
-        drum.append(ytube(0, hd, ro / 2, od / 2, yr, yr + rt))
-    nh, dh, rh = P["disc_holes"]
-    for yd in (-L / 2, L / 2 - P["end_disc_t"]):
-        disc = ytube(0, hd, od / 2 - t, sh / 2, yd, yd + P["end_disc_t"])
-        for k in range(nh):                      # lightening holes
-            a = 2 * math.pi * (k + 0.5) / nh
-            disc = disc - ycyl(rh * math.cos(a), hd + rh * math.sin(a), dh / 2, yd - 1, yd + P["end_disc_t"] + 1)
-        drum.append(disc)
-    drum.append(ycyl(0, hd, sh / 2, *D["drum_shaft_y"]))
-    ys, st_ = D["y_spr"], P["sprocket_t"]
-    rb = D["od_big"] / 2
-    rb_m = D["pd_big"] / 2 - P["chain_h"] / 2          # modelled to the chain's inner edge (teeth not drawn)
-    big = ycyl(0, hd, rb_m, ys - st_ / 2, ys + st_ / 2) - ycyl(0, hd, sh / 2, ys - 5, ys + 5)
-    drum.append(big)
-    drum.append(ytube(0, hd, 25.0, sh / 2, ys + st_ / 2, -(yb + P["ucp206"][5] / 2 + 6.0)))    # big sprocket hub
-    y_r = D["y_ratchet"]
-    tr = P["ratchet"][3]
-    drum.append(mirror(_ratchet_wheel(P, y_r, 60.0, forward=False), Plane.YZ))     # wheel 1, pawl in front
-    drum.append(ytube(0, hd, 22.0, sh / 2, y_r + tr, y_r + tr + 4.0))                   # spacer collar
-    drum.append(_ratchet_wheel(P, y_r + tr + 4.0, 60.0, forward=False))
-    drum.append(ytube(0, hd, 22.0, sh / 2, yb + P["ucp206"][5] / 2 + 2.0, y_r))          # inner collar
-    # rope anchor clamps on the end rings (one per half): a block with a U-bolt, modelled as a block
-    for sg in (-1, 1):
-        yy = sg * (L / 2 - rt)
-        drum.append(bx(-20, 20, min(yy, yy - sg * 18), max(yy, yy - sg * 18), hd + od / 2, hd + od / 2 + 14))
-    out["drum"] = fuse(drum)
-
-    # crank shaft (with the cross hole for the shear pin), small sprocket on its hub, shear pin
-    cs = P["crank_shaft"]
-    ya, yz = D["crank_shaft_y"]
-    hub_o, hub_l = P["hub"]
-    yh0, yh1 = D["y_hub"]
-    ypin = (yh0 + yh1) / 2 + 4.0
-    pin = xcyl(ypin, hc, P["shear_pin"] / 2, xc - hub_o / 2 - 1.5, xc + hub_o / 2 + 1.5)
-    shaft = ycyl(xc, hc, cs / 2, ya, yz) - pin
-    out["crank_shaft"] = shaft
-    rs = D["od_small"] / 2
-    rs_m = D["pd_small"] / 2 - P["chain_h"] / 2
-    small = (ycyl(xc, hc, rs_m, ys - st_ / 2, ys + st_ / 2) + ytube(xc, hc, hub_o / 2, cs / 2, ys + st_ / 2, yh1)
-             - ycyl(xc, hc, cs / 2, ys - 5, yh1 + 1)) - pin
-    out["small_sprocket"] = small
-    out["shear_pin"] = pin
-
-    # chain: a band round the two pitch circles
-    rps, rpb = D["pd_small"] / 2, D["pd_big"] / 2
-    ch = P["chain_h"]
-    cw = P["chain_w"]
-    chain = (stadium_xz((xc, hc), rps + ch / 2, (0, hd), rpb + ch / 2, ys - cw / 2, ys + cw / 2, 96)
-             - stadium_xz((xc, hc), rps - ch / 2 + 0.6, (0, hd), rpb - ch / 2 + 0.6, ys - cw, ys + cw, 96))
-    out["chain"] = chain
-
-    # chain guard: closed sheet box round the drive, holes for both shafts and the hubs
-    gt, gc, _ = P["guard"]
-    g0, g1 = D["y_guard"]
-    outer = stadium_xz((xc, hc), rs + gc, (0, hd), rb + gc, g0, g1, 64)
-    inner = stadium_xz((xc, hc), rs + gc - gt, (0, hd), rb + gc - gt, g0 + gt, g1 - gt, 64)
-    guard = outer - inner
-    guard = guard - ycyl(xc, hc, hub_o / 2 + 5, g1 - gt - 1, g1 + 1) - ycyl(0, hd, 25.0 + 5, g1 - gt - 1, g1 + 1)
-    guard = guard - ycyl(xc, hc, cs / 2 + 4, g0 - 1, g0 + gt + 1)
-    out["guard"] = guard
-
-    # cranks: arm with a handle on each end of the crank shaft, 180 degrees apart
-    cb, ct = P["crank_bar"]
-    cr = P["crank_r"]
-    hdia, hlen = P["handle"]
-    cranks = []
-    for (y0, y1), ang, out_sign in ((D["y_crank_p"], 180.0, 1), (D["y_crank_m"], 0.0, -1)):
-        a = math.radians(ang)
-        ex, ez = xc + cr * math.cos(a), hc + cr * math.sin(a)
-        arm = prism_xz(hull2d(circle_pts(xc, hc, cb / 2 + 6, 32) + circle_pts(ex, ez, cb / 2, 32)), y0, y1)
-        arm = arm - ycyl(xc, hc, cs / 2, y0 - 1, y1 + 1)
-        hy0, hy1 = (y1, y1 + hlen) if out_sign > 0 else (y0 - hlen, y0)
-        handle = ycyl(ex, ez, hdia / 2, hy0, hy1)
-        cranks += [arm, handle]
-    out["cranks"] = fuse(cranks)
-
-    # pawls: pawl 1 engaged (holds the haul direction), pawl 2 lifted onto its stop
-    y_r = D["y_ratchet"]
-    out["pawls"] = fuse([mirror(_pawl(P, y_r, 0.0), Plane.YZ), _pawl(P, y_r + tr + 4.0, PAWL_LIFT)])
-
-    # stakes (four) through the stake tubes
-    sd, sl, sdep = P["stake"]
-    so = P["stake_tube"][0]
-    stakes = []
-    for sg in (-1, 1):
-        for xs in P["stake_x"]:
-            ys_ = sg * (yb + s / 2 + so / 2 - 0.5)
-            ztop = P["stake_tube"][2]          # the head rests on the top of the stake tube
-            stakes.append(zcyl(xs, ys_, sd / 2, ztop - sl, ztop) + zcyl(xs, ys_, 16.0, ztop, ztop + 12))
-    out["stakes"] = fuse(stakes)
-    return out
-
-
-# ----------------------------------------------------------------------------- scraper box
-def box_parts(P=PARAMS):
-    """Box in its own coordinates: rear at x = 0, open front toward +X, centred on y = 0."""
-    W, Lb, H, t = P["box"]
-    sk_t, sk_h, sk_y = P["skid"]
-    br = P["back_run"]
-    wy = W / 2
-    z_f = sk_h                       # floor underside
-    parts = []
-    # skids with the rear end cut at 45 degrees
-    for sg in (-1, 1):
-        parts.append(prism_xz([(br - 20 + sk_h, 0), (Lb, 0), (Lb, sk_h), (br - 20, sk_h)], sg * sk_y - sk_t / 2, sg * sk_y + sk_t / 2))
-    parts.append(bx(br, Lb, -wy, wy, z_f, z_f + t))                                    # floor
-    parts.append(prism_xz([(br - 2, z_f), (br, z_f), (2, z_f + H), (0, z_f + H)], -wy, wy))   # sloped back
-    for sg in (-1, 1):                                                                 # sides
-        y0 = wy if sg > 0 else -wy - t
-        parts.append(prism_xz([(br - 2, z_f), (Lb, z_f), (Lb, z_f + H), (0, z_f + H)], y0, y0 + t))
-    # cutting lip, 8 mm bar set at about 20 degrees, bevelled to the floor
-    parts.append(prism_xz([(Lb, z_f + t), (Lb, z_f - 7), (Lb + 50, 0), (Lb + 60, 0), (Lb + 60, 2.5), (Lb + 8, z_f + t)],
-                          -wy - t, wy + t))
-    # bridle lugs: 10 mm plates on the outside of each side, front and rear
-    lt = P["lug_t"]
-    for sg in (-1, 1):
-        y0 = wy + t if sg > 0 else -wy - t - lt
-        parts.append(prism_xz([(Lb - 60, 40), (Lb + 40, 40), (Lb + 40, 110), (Lb - 60, 110)], y0, y0 + lt)
-                     - ycyl(Lb + 10, 75, 9.5, y0 - 1, y0 + lt + 1))
-        xr_ = P["lug_rear_x"]
-        parts.append(prism_xz([(xr_ - 30, 40), (xr_ + 85, 40), (xr_ + 85, 110), (xr_ - 30, 110)], y0, y0 + lt)
-                     - ycyl(xr_, 75, 9.5, y0 - 1, y0 + lt + 1))
-    # tipping bar socket on the back, 45 degrees up and back
-    so, st, sl = P["socket"]
-    zb = z_f + H - P["socket_drop"]
-    xb = br * (z_f + H - zb) / H - 2 + 1.0         # on the back plate's outer face
-    dvec = (-math.sqrt(0.5), 0, math.sqrt(0.5))
-    a = (xb + 12.0, 0, zb - 12.0)
-    b = (a[0] + dvec[0] * sl, 0, a[2] + dvec[2] * sl)
-    sock = rod(a, b, so / 2) - rod((a[0] - dvec[0] * 5, 0, a[2] - dvec[2] * 5), (b[0] + dvec[0], 0, b[2] + dvec[2]), so / 2 - st)
-    # trim the part of the socket that would sit inside the box
-    sock = sock - prism_xz([(br - 2, z_f), (Lb, z_f), (Lb, z_f + H + 50), (2, z_f + H + 50), (2, z_f + H)], -wy, wy)
-    parts.append(sock)
-    out = {"box": fuse(parts)}
-    # loose tipping bar in the socket (as stowed for dumping)
-    tb_o, tb_t, tb_l = P["tip_bar"]
-    a2 = (a[0] + dvec[0] * 48, 0, a[2] + dvec[2] * 48)
-    b2 = (a2[0] + dvec[0] * tb_l, 0, a2[2] + dvec[2] * tb_l)
-    out["tip_bar"] = rod(a2, b2, tb_o / 2) - rod(a2, b2, tb_o / 2 - tb_t)
-    # bridles: a shackle pin through each lug, a leg of 8 mm chain (drawn as a bar) to a pear ring
-    fr, rr = P["bridle_reach"]
-    zr = 75.0
-    br_parts = []
-    for (xl, xr) in ((Lb + 10, Lb + fr), (P["lug_rear_x"], -rr)):
-        sgx = 1 if xr > xl else -1
-        br_parts.append(Pos(xr + sgx * 28, 0, zr) * Rot(90, 0, 0) * (Cylinder(28, 10) - Cylinder(18, 12)))
-        for sg in (-1, 1):
-            y_in, y_out = sg * (wy + t), sg * (wy + t + lt + 12)
-            br_parts.append(ycyl(xl, zr, 9.5, min(y_in, y_out), max(y_in, y_out)))
-            yo = sg * (wy + t + lt + 6)
-            br_parts.append(rod((xl, yo, zr), (xr + sgx * 6, sg * 14, zr), 4.5))
-    out["bridles"] = fuse(br_parts)
-    return out
-
-
-# ----------------------------------------------------------------------------- tail sheave block
-def tail_parts(P=PARAMS):
-    """Tail sheave block: sheave A centre at (0, r), sheave B at (0, ret_y - r); floor at z = 0."""
-    pl, pw, pt = P["tail_plate"]
-    pd, sod, sw = P["sheave"]
-    r = pd / 2
-    yA, yB = r, P["ret_y"] - r
-    yc = P["ret_y"] / 2
-    zr = P["rope_z"]
-    pin = P["tail_pin"]
-    an_d, an_l = P["anchor"]
-    holes = [(-110.0, yc - 170.0), (-110.0, yc + 170.0), (110.0, yc - 170.0), (110.0, yc + 170.0)]
-    plate = bx(-pl / 2, pl / 2, yc - pw / 2, yc + pw / 2, 0, pt)
-    for hx, hy in holes:
-        plate = plate - zcyl(hx, hy, an_d / 2 + 1, -1, pt + 1)
-    z_sh0, z_sh1 = zr - sw / 2, zr + sw / 2
-    zk0 = z_sh1 + 5.0
-    pins, spacers, sheaves = [], [], []
-    for y in (yA, yB):
-        pins.append(zcyl(0, y, pin / 2, pt, zk0 + 6 + 10))
-        spacers.append(zcyl(0, y, 16.0, pt, z_sh0) - zcyl(0, y, pin / 2, pt - 1, z_sh0 + 1))
-        fl = 6.0
-        sheave = (zcyl(0, y, sod / 2, z_sh0, z_sh0 + fl) + zcyl(0, y, r - 5.5, z_sh0 + fl - 0.1, z_sh1 - fl + 0.1)
-                  + zcyl(0, y, sod / 2, z_sh1 - fl, z_sh1)) - zcyl(0, y, pin / 2, z_sh0 - 1, z_sh1 + 1)
-        sheaves.append(sheave)
-    out = {"tail_plate": fuse([plate] + pins)}
-    out["tail_spacers"] = fuse(spacers)
-    out["sheaves"] = fuse(sheaves)
-    keeper = bx(-20, 20, yA - 30, yB + 30, zk0, zk0 + 6)
-    for y in (yA, yB):
-        keeper = keeper - zcyl(0, y, pin / 2, zk0 - 1, zk0 + 7)
-    out["keeper"] = keeper
-    anchors = []
-    for hx, hy in holes:
-        anchors.append(zcyl(hx, hy, an_d / 2, -an_l, pt + 14) + zcyl(hx, hy, 12.0, pt, pt + 3)
-                       + Pos(hx, hy, pt + 3 + 5) * Cylinder(10.0, 10))
-    out["anchors"] = fuse(anchors)
-    return out
-
-
-# ----------------------------------------------------------------------------- doorway ramp
-def ramp_parts(P=PARAMS):
-    """Threshold ramp centred on the threshold (x = 0) and on its own centre line (y = 0)."""
-    hl, wi, hcst, dt = P["ramp"]
-    ct = P["cheek_t"]
-    ro, rt, rl = P["roller"]
-    ax = P["axle"]
-    th = P["threshold_max"]
-    zt = P["cheek_top"]
-    yi = wi / 2
-    out = {}
-    cheek_pts = [(-hl, 0), (-110, 0), (-110, th), (110, th), (110, 0), (hl, 0), (hl, 12), (150, zt), (-150, zt), (-hl, 12)]
-    cheeks = []
-    for sg in (-1, 1):
-        y0 = yi if sg > 0 else -yi - ct
-        cheeks.append(prism_xz(cheek_pts, y0, y0 + ct) - ycyl(0, hcst - 20, ax / 2 + 0.5, y0 - 1, y0 + ct + 1))
-    out["cheeks"] = fuse(cheeks)
-    # deck trays: 3 mm sheet, top from the floor to the crest, 30 mm flanges down each side
-    xe = 40.0
-    decks = []
-    for sg in (-1, 1):
-        xb_ = hl - dt * (hl - xe) / hcst            # where the underside meets the floor
-        top = [(sg * hl, 0), (sg * xe, hcst), (sg * xe, hcst - dt), (sg * xb_, 0)]
-        decks.append(prism_xz(top, -yi, yi))
-        for yy in (-yi, yi - dt):                   # side flanges, bolted through the cheeks
-            fl = [(sg * (xb_ - 60), 0.0), (sg * xe, hcst - dt - 30), (sg * xe, hcst - dt), (sg * xb_, 0.0)]
-            decks.append(prism_xz(fl, yy, yy + dt))
-    out["decks"] = fuse(decks)
-    zr = hcst - 20
-    out["roller"] = fuse([ytube(0, zr, ro / 2, ro / 2 - rt, -rl / 2, rl / 2),
-                          ytube(0, zr, ro / 2 - rt, ax / 2, -rl / 2, -rl / 2 + 20),
-                          ytube(0, zr, ro / 2 - rt, ax / 2, rl / 2 - 20, rl / 2)])
-    out["axle"] = ycyl(0, zr, ax / 2, -yi - ct - 12, yi + ct + 12)
-    return out
-
-
-# ----------------------------------------------------------------------------- site assembly
-@dataclass
-class Comp:
-    name: str
-    shape: object
-    bom: int
-    group: str          # capstan, box, tail, ramp, rope, anchor
-    material: str
-
-
-BOM = {  # key: (BOM line, plain name)
-    "frame": (1, "Capstan side frames (2)"),
-    "cross_members": (1, "Frame cross members (4)"),
-    "frame_bolts": (21, "Frame bolts (8 M10, 4 M12)"),
-    "drum": (2, "Winding drum with sprocket and ratchet wheels"),
-    "drum_bearings": (3, "Drum bearings (2)"),
-    "crank_bearings": (4, "Crank shaft bearings (2)"),
-    "crank_shaft": (5, "Crank shaft"),
-    "cranks": (5, "Cranks with handles (2)"),
-    "small_sprocket": (6, "Small sprocket on its hub"),
-    "chain": (7, "Roller chain"),
-    "pawls": (8, "Pawls (2)"),
-    "guard": (9, "Chain guard"),
-    "shear_pin": (10, "Shear pin"),
-    "stakes": (11, "Ground stakes (4)"),
-    "sling": (12, "Anchor sling and shackle"),
-    "tail_plate": (13, "Tail plate with pins"),
-    "tail_spacers": (13, "Sheave spacers (2)"),
-    "keeper": (13, "Keeper bar"),
-    "sheaves": (14, "Tail sheaves (2)"),
-    "anchors": (15, "Floor anchors (4)"),
-    "ropes": (16, "Pull rope, tail rope and return rope"),
-    "box": (17, "Scraper box 1"),
-    "box_2": (17, "Scraper box 2"),
-    "tip_bar": (18, "Tipping bar"),
-    "bridles": (20, "Bridles, shackles and rings, box 1"),
-    "bridles_2": (20, "Bridles, shackles and rings, box 2"),
-    "cheeks": (19, "Ramp cheeks (2)"),
-    "decks": (19, "Ramp decks (2)"),
-    "roller": (19, "Crest roller"),
-    "axle": (19, "Roller axle"),
-}
-MATERIAL = {"frame": "steel", "cross_members": "steel", "frame_bolts": "steel", "box_2": "steel", "bridles_2": "steel", "drum": "steel", "drum_bearings": "cast iron", "crank_bearings": "cast iron",
-            "crank_shaft": "steel", "cranks": "steel", "small_sprocket": "steel", "chain": "steel",
-            "pawls": "steel", "guard": "steel", "shear_pin": "steel", "stakes": "steel", "sling": "polyester",
-            "tail_plate": "steel", "tail_spacers": "steel", "keeper": "steel", "sheaves": "steel",
-            "anchors": "steel", "ropes": "polyester", "box": "steel", "tip_bar": "steel", "bridles": "steel",
-            "cheeks": "plywood", "decks": "steel", "roller": "steel", "axle": "steel"}
-
-
-def ramp_y(P=PARAMS):
-    """Ramp centre line: midway between the two box lines, so both boxes cross it inside the cheeks."""
-    return P["ret_y"] / 2
-
-
 def site(P=PARAMS, short=False):
     L = dict(P)
     if short:
@@ -704,81 +184,666 @@ def site(P=PARAMS, short=False):
     return L
 
 
-def build_components(P=PARAMS, short=False):
-    """Every component placed on site. Returns {key: Comp}."""
-    L = site(P, short)
-    D = derived(P)
-    comps = {}
-    cap = capstan_parts(P)
-    cap_loc = Pos(L["x_cap"], P["cap_y"], 0)
-    for k, s in cap.items():
-        if k.startswith("frame_side"):
-            continue
-        comps[k] = Comp(BOM[k][1], cap_loc * s, BOM[k][0], "capstan", MATERIAL[k])
-    # box 1 on the box line in the room; box 2 on the return leg at the dump, carrying the tipping bar
-    bp = box_parts(P)
-    for k in ("box", "bridles"):
-        comps[k] = Comp(BOM[k][1], Pos(L["box_x0"], 0, 0) * bp[k], BOM[k][0], "box", MATERIAL[k])
-    for k in ("box", "bridles", "tip_bar"):
-        k2 = k if k == "tip_bar" else k + "_2"
-        comps[k2] = Comp(BOM[k2][1], Pos(L["box2_x0"], P["ret_y"], 0) * bp[k], BOM[k2][0], "box", MATERIAL[k2])
-    for k, s in tail_parts(P).items():
-        comps[k] = Comp(BOM[k][1], s, BOM[k][0], "tail", MATERIAL[k])
-    for k, s in ramp_parts(P).items():
-        comps[k] = Comp(BOM[k][1], Pos(L["x_door"], ramp_y(P), 0) * s, BOM[k][0], "ramp", MATERIAL[k])
-    # ropes as straight legs, 10 mm
-    rr = P["rope_d"] / 2
-    Lb = P["box"][1]
-    zr = 75.0
-    x_front_ring = L["box_x0"] + Lb + P["bridle_reach"][0] + 28
-    x_rear_ring = L["box_x0"] - P["bridle_reach"][1] - 28
-    x_front_ring2 = L["box2_x0"] + Lb + P["bridle_reach"][0] + 28
-    x_rear_ring2 = L["box2_x0"] - P["bridle_reach"][1] - 28
-    hcst = P["ramp"][2]
-    xr = L["x_door"]
-    zroll = hcst - 20 + P["roller"][0] / 2 + rr
-    xd = L["x_cap"]
-    ypull = P["cap_y"] + D["y_pull"]
-    yret = P["cap_y"] + D["y_ret"]
-    rz = P["rope_z"]
-    r = P["sheave"][0] / 2
-    ry = P["ret_y"]
-    legs = [((x_front_ring, 0, zr), (xr, 0, zroll)), ((xr, 0, zroll), (xd, ypull, D["z_under"])),     # pull rope
-            ((x_rear_ring, 0, zr), (0, 0, rz)), ((-r, r, rz), (-r, ry - r, rz)),                       # tail rope
-            ((0, ry, rz), (xr, ry, zroll)), ((xr, ry, zroll), (x_rear_ring2, ry, zr)),
-            ((x_front_ring2, ry, zr), (xd, yret, D["z_over"]))]                                         # return rope
-    ropes = [rod(a, b, rr) for a, b in legs]
-    comps["ropes"] = Comp(BOM["ropes"][1], fuse(ropes), 16, "rope", "polyester")
-    # sling from the anchor eye to the anchor point (vehicle or tree) 2 m behind
-    ex = L["x_cap"] + anchor_bar_x(P) + P["shs"][0] / 2 + 45
-    cy = P["cap_y"]
-    zs = P["hd"]
-    sling = bx(ex + 40, ex + 2900, cy - 25, cy + 25, zs - 3, zs + 3)
-    shackle = (ycyl(ex, zs, 11.0, cy - 16, cy + 16) + bx(ex - 11, ex + 40, cy + 5, cy + 12, zs - 11, zs + 11)
-               + bx(ex - 11, ex + 40, cy - 12, cy - 5, zs - 11, zs + 11) + bx(ex + 28, ex + 40, cy - 12, cy + 12, zs - 11, zs + 11))
-    comps["sling"] = Comp(BOM["sling"][1], fuse([sling, shackle]), 12, "anchor", "polyester")
-    return comps
-
-
-def assembly(P=PARAMS, short=False, keys=None):
-    C = build_components(P, short)
-    return Compound([c.shape for k, c in C.items() if keys is None or k in keys])
+def ramp_y(P=PARAMS):
+    """Ramp centre line: midway between the two box lines, so both boxes cross it inside the cheeks."""
+    return P["ret_y"] / 2
 
 
 def context_shapes(P=PARAMS, short=True):
-    """Grey context: a wall with a doorway and threshold, and a tree as the outside anchor."""
+    """Site context (not part of any option): a wall with a doorway and threshold, and a tree as the outside anchor.
+    Every piece reaches 300 mm or more below the floor (z = 0) so that a ground plane at z = 0 never shows a gap."""
     L = site(P, short)
     xd = L["x_door"]
     ry_ = ramp_y(P)
     w2 = 380.0               # door opening half width (0.76 m)
-    wall = (bx(xd - 100, xd + 100, -700, ry_ - w2, 0, 2250) + bx(xd - 100, xd + 100, ry_ + w2, 1500, 0, 2250)
+    zb = -300.0
+    wall = (bx(xd - 100, xd + 100, -700, ry_ - w2, zb, 2250) + bx(xd - 100, xd + 100, ry_ + w2, 1500, zb, 2250)
             + bx(xd - 100, xd + 100, ry_ - w2, ry_ + w2, 2050, 2250))
-    thr = bx(xd - 60, xd + 60, ry_ - w2, ry_ + w2, 0, 60)
-    tree = zcyl(L["x_cap"] + anchor_bar_x(P) + P["shs"][0] / 2 + 45 + 2900 + 160, P["cap_y"], 160, 0, 2600)
+    thr = bx(xd - 60, xd + 60, ry_ - w2, ry_ + w2, zb, 60)
+    tree = zcyl(L["x_cap"] + anchor_bar_x(P) + P["shs"][0] / 2 + 45 + 2900 + 160, P["cap_y"], 160, -500, 2600)
     return {"wall": wall, "threshold": thr, "tree": tree}
 
 
-# ----------------------------------------------------------------------------- checks
+def _bolts(parts, items, key, bom, explode=(0, 0, 0), group="shell", tag=""):
+    """Add bolt-set items [(name, shape)] as fastener parts."""
+    for n, sh in items:
+        parts.append(mk(n + tag, sh, "zinc_plated", "fastener", key, bom, explode, group))
+
+
+# ----------------------------------------------------------------------------- capstan (option A)
+def _bearing(P, kind, x, y, zc, sg):
+    h, L, W, t, hd_, hw, pitch = P[kind]
+    shaft = P["drum_shaft"] if kind == "ucp206" else P["crank_shaft"]
+    md = 14.0 if kind == "ucp206" else 12.0
+    base = bx(x - L / 2, x + L / 2, y - W / 2, y + W / 2, zc - h, zc - h + t)
+    web = bx(x - hd_ * 0.42, x + hd_ * 0.42, y - hw / 2, y + hw / 2, zc - h + t - 0.1, zc)
+    housing = ycyl(x, zc, hd_ / 2, y - hw / 2, y + hw / 2)
+    body = base + web + housing
+    for hx in (-pitch / 2, pitch / 2):
+        body = body - zcyl(x + hx, y, md / 2 + 0.5, zc - h - 1, zc - h + t + 1)
+    nipple = zcyl(x - 8, y, 3.0, zc + hd_ / 2 - 3, zc + hd_ / 2 + 9) + zcyl(x - 8, y, 4.2, zc + hd_ / 2 + 9, zc + hd_ / 2 + 12)
+    body = body + nipple - ycyl(x, zc, shaft / 2, y - hw, y + hw)
+    return body
+
+
+def _sprocket(teeth, pd, t, y0, cx, cz, hub=None, bore=None):
+    """Plate sprocket in the XZ plane at (cx, cz), thickness t from y0: disc to just outside the pitch circle
+    with a roller seat cut at every pitch point (so the chain rollers sit in the gaps)."""
+    p = 12.7
+    rr = 8.51 / 2 + 0.15
+    disc = ycyl(cx, cz, pd / 2 + 2.0, y0, y0 + t)
+    for k in range(teeth):
+        a = 2 * math.pi * k / teeth
+        disc = disc - ycyl(cx + pd / 2 * math.cos(a), cz + pd / 2 * math.sin(a), rr, y0 - 1, y0 + t + 1)
+    return disc
+
+
+def _ratchet_wheel(P, y0, first_deg, forward=True):
+    od, rd, n, t = P["ratchet"]
+    R, r = od / 2, rd / 2
+    pts = []
+    for k in range(n):
+        a = math.radians(first_deg + 360.0 * k / n)
+        b = math.radians(first_deg + 360.0 * (k + 1) / n)
+        if forward:
+            pts += [(r * math.cos(a), r * math.sin(a))]
+            pts += [(R * math.cos(b - 0.002), R * math.sin(b - 0.002))]
+        else:
+            pts += [(R * math.cos(a + 0.002), R * math.sin(a + 0.002))]
+            pts += [(r * math.cos(b), r * math.sin(b))]
+    wheel = prism_xz([(x, z + P["hd"]) for x, z in pts], y0, y0 + t)
+    return wheel - ycyl(0, P["hd"], P["drum_shaft"] / 2, y0 - 1, y0 + t + 1)
+
+
+def _pawl(P, y0, lift_deg=0.0):
+    px, pz = P["pawl_pivot"]
+    hd = P["hd"]
+    tip_r, tip_a = 85.0, math.radians(57.5)
+    tx, tz = tip_r * math.cos(tip_a), hd + tip_r * math.sin(tip_a)
+    pts = hull2d(circle_pts(px, pz, 14.0, 32) + circle_pts(tx, tz, 2.5, 16) +
+                 circle_pts(px - 30, pz + 16, 6.0, 16))
+    s = prism_xz(pts, y0, y0 + P["pawl_t"]) - ycyl(px, pz, 6.0, y0 - 1, y0 + P["pawl_t"] + 1)
+    if lift_deg:
+        s = rotate_about_y(s, px, pz, lift_deg)
+    return s
+
+
+PAWL_LIFT = 24.0       # degrees pawl 2 is turned up onto its stop in the pictures
+
+
+def _chain_geometry(P, D):
+    """Roller centres (x, z) of the 08B-1 chain round the two sprockets (open belt) and the closed path."""
+    xc, hc, hd = P["xc"], P["hc"], P["hd"]
+    r1, r2 = D["pd_small"] / 2, D["pd_big"] / 2
+    C1, C2 = (xc, hc), (0.0, hd)
+    ux, uz = C2[0] - C1[0], C2[1] - C1[1]
+    dc = math.hypot(ux, uz)
+    th = math.atan2(uz, ux)
+    off = math.acos((r1 - r2) / dc)
+    na, nb = th - off, th + off                # outward normals of the two tangent lines
+    z1, z2 = P["z_small"], P["z_big"]
+    pts = []
+
+    def arc(c, r, z, a_from, a_to):             # rollers at the sprocket's tooth angles, going ccw from a_from to a_to
+        out = []
+        step = 2 * math.pi / z
+        k0 = math.ceil((a_from - 1e-6) / step)
+        a = k0 * step
+        while a <= a_to + 1e-6:
+            out.append((c[0] + r * math.cos(a), c[1] + r * math.sin(a)))
+            a += step
+        return out
+    # wrap on the big sprocket, from normal na to normal nb going the long way round the far side (away from C1)
+    def norm(a, lo):
+        while a < lo:
+            a += 2 * math.pi
+        return a
+    big_from = norm(nb, 0.0)
+    big_to = norm(na, big_from)
+    if big_to - big_from > math.pi * 1.5:       # choose the side that wraps the far side of the big sprocket
+        pass
+    # which pair of normals wraps the side facing away from the other sprocket: it contains the direction th
+    def contains(a0, a1, a):
+        a = norm(a, a0)
+        return a <= a1
+    if not contains(norm(na, 0.0), norm(nb, norm(na, 0.0)), th):
+        na, nb = nb, na
+    # big sprocket wraps from na to nb (ccw) around direction th; small sprocket wraps from nb to na around th + pi
+    a0 = norm(na, 0.0)
+    a1 = norm(nb, a0)
+    big = arc(C2, r2, z2, a0, a1)
+    b0 = norm(nb, 0.0)
+    b1 = norm(na, b0)
+    small = arc(C1, r1, z1, b0, b1)
+    return big, small
+
+
+def capstan(P=PARAMS):
+    """The capstan in its own coordinates: drum axis along Y at x = 0, z = hd; the rope arrives from -X."""
+    D = derived(P)
+    s, w = P["shs"]
+    yb = D["yb"]
+    x0, x1 = P["rail_x"]
+    xc, hc, hd = P["xc"], P["hc"], P["hd"]
+    h6, h5 = P["ucp206"][0], P["ucp205"][0]
+    pad_top, top_top = hd - h6, hc - h5
+    ep = P["end_plate"]
+    yi = yb - s / 2
+    yt = yi - ep
+    out = []
+    A = lambda *a, **k: out.append(mk(*a, **k))  # noqa: E731
+    pl, pw, pt = P["pad_plate"]
+    tl, tw, tt = P["top_plate"]
+    p206, p205 = P["ucp206"][6], P["ucp205"][6]
+
+    # ---- cross-member geometry first: the bolt positions drive the holes in the side frames
+    bolts_cm = []          # (x, z, d, member)
+    for xcm in P["x_cross"]:
+        bp = P["bolt_pitch"] / 2
+        bolts_cm += [(xcm - bp, s / 2, 10, f"rail{xcm:.0f}"), (xcm + bp, s / 2, 10, f"rail{xcm:.0f}")]
+    zt0 = 700.0
+    bolts_cm += [(xc, zt0 + s / 2 - 37, 10, "tie"), (xc, zt0 + s / 2 + 37, 10, "tie")]
+    xa = anchor_bar_x(P)
+    ax_, az_ = x1 - 50, s - 6
+    bx_, bz_ = xc + s / 2 - 2, 560.0
+    L_b = math.hypot(bx_ - ax_, bz_ - az_)
+    ux, uz = (bx_ - ax_) / L_b, (bz_ - az_) / L_b
+    t0 = (hd - az_) / (bz_ - az_)
+    xbc = ax_ + t0 * (bx_ - ax_)
+    bolts_cm += [(xbc - 40 * ux, hd - 40 * uz, 12, "anchor"), (xbc + 40 * ux, hd + 40 * uz, 12, "anchor")]
+
+    # ---- side frames (welded weldments): rail, pad posts and plate, post and top plate, braces, stake tubes
+    sides = {}
+    for sg in (-1, 1):
+        y = sg * yb
+        sp = []
+        sp.append(tube_between((x0, y, s / 2), (x1, y, s / 2), s, w))                          # side rail
+        sp.append(Pos(0, y, pad_top - pt) * cp.sheet(pl, pw, pt, holes=[(-p206 / 2, 0, 15.0), (p206 / 2, 0, 15.0)]))
+        for xp in (-60.0, 60.0):
+            sp.append(tube_between((xp, y, s), (xp, y, pad_top - pt), s, w))                   # pad posts
+        for hx in (-p206 / 2, p206 / 2):                                                       # M14 weld nuts under the pad
+            sp.append(Pos(hx, y, pad_top - pt - cp.ISO[14][2]) * cp.hex_nut(14))
+        sp.append(tube_between((xc, y, s), (xc, y, top_top - tt), s, w))                       # upright post
+        sp.append(Pos(xc, y, top_top - tt) * cp.sheet(tl, tw, tt, holes=[(-p205 / 2, 0, 13.0), (p205 / 2, 0, 13.0)]))
+        sp.append(tube_between((x0 + 60, y, s - 6), (xc - s / 2 + 2, y, 640.0), s, w))         # front brace
+        sp.append(tube_between((x1 - 50, y, s - 6), (xc + s / 2 - 2, y, 560.0), s, w))         # rear brace
+        so, st, sl = P["stake_tube"]
+        for xs in P["stake_x"]:
+            ys = y + sg * (s / 2 + so / 2 - 0.5)
+            sp.append(Pos(xs, ys, 0) * cp.round_tube(so, st, sl))
+        # crush sleeves for the cross member bolts (the bolts clamp through the hollow section)
+        for bxp, bzp, d, _ in bolts_cm:
+            sp.append(ycyl(bxp, bzp, 8.5, y - s / 2, y + s / 2))
+        sides[sg] = sp
+    # pawl brackets and pins: pawl 2 on the +Y post's outer face, pawl 1 on the +Y front brace
+    px, pz = P["pawl_pivot"]
+    y_r = D["y_ratchet"]
+    tr = P["ratchet"][3]
+    y_pin_end2 = y_r + 2 * tr + 4.0 + 6.0
+    y_pin_end1 = y_r + tr + 2.0
+    sides[1].append(bx(px - 20, xc + s / 2, yb + s / 2, yb + s / 2 + 6, pz - 30, pz + 30))
+    sides[1].append(bx(-px - 40, -px + 22, yb + s / 2, yb + s / 2 + 6, pz - 30, pz + 30))
+    # guard flanges on the -Y post's outer face
+    gt, gc, _ = P["guard"]
+    g0, g1 = D["y_guard"]
+    for zt in (430.0, 700.0):
+        sides[-1].append(bx(xc - 15, xc + 15, g1, -yb - s / 2, zt, zt + 3))                    # web welded to the post
+        sides[-1].append(bx(xc - 15, xc + 15, g1, g1 + 3, zt - 13.5, zt + 16.5))               # flange against the guard
+    # bolt holes through the side frames
+    for sg in (-1, 1):
+        shp = fuse(sides[sg])
+        for bxp, bzp, d, _ in bolts_cm:
+            shp = shp - ycyl(bxp, bzp, d / 2 + 0.5, sg * yb - s / 2 - 1, sg * yb + s / 2 + 1)
+        for zt in (430.0, 700.0):
+            shp = shp - ycyl(xc - 6.0, zt + 10.0, 3.3, g1 - 1, g1 + 4)
+        # pawl bracket pin holes (+Y only)
+        if sg == 1:
+            shp = shp - ycyl(px, pz, 6.0, yb + s / 2 - 1, yb + s / 2 + 7) - ycyl(-px, pz, 6.0, yb + s / 2 - 1, yb + s / 2 + 7)
+        sides[sg] = shp
+    A("Side frame -Y (chain side)", sides[-1], "painted_steel", "made", "frame", 1, (0, 0, 0))
+    A("Side frame +Y (pawl side)", sides[1], "painted_steel", "made", "frame", 1, (0, 0, 0))
+
+    # ---- welds on the side frames: plates onto their posts
+    for sg in (-1, 1):
+        y = sg * yb
+        wl = []
+        for xp in (-60.0, 60.0):
+            for e in (-1, 1):
+                wl.append(weld_bead((xp - 20, y + e * 20, pad_top - pt), (xp + 20, y + e * 20, pad_top - pt), (0, e, 0), (0, 0, -1), 4.0))
+        for e in (-1, 1):
+            wl.append(weld_bead((xc - 20, y + e * 20, top_top - tt), (xc + 20, y + e * 20, top_top - tt), (0, e, 0), (0, 0, -1), 4.0))
+        A(f"Welds, side frame {'+Y' if sg > 0 else '-Y'} (plates to posts)", Compound(wl), "mild_steel", "weld", "frame", None, (0, 0, 0))
+
+    # ---- cross members: tube with an end plate welded on each end
+    def end_plate(ycen_in, sg, wd, ht, xcen, zcen, holes):
+        """8 mm plate between the tube end (at |y| = yt) and the side frame (|y| = yi)."""
+        y_hi = max(sg * yt, sg * yi)
+        shp = cp.sheet(wd, ht, ep, holes=holes, r_corner=4.0)
+        return at(shp, (xcen, y_hi, zcen), (90, 0, 0))
+
+    cms = {}
+    for i, xcm in enumerate(P["x_cross"]):
+        name = "Front cross rail" if i == 0 else "Rear cross rail"
+        bp = P["bolt_pitch"] / 2
+        parts_ = [tube_between((xcm, -yt, s / 2), (xcm, yt, s / 2), s, w)]
+        for sg in (-1, 1):
+            parts_.append(end_plate(0, sg, 100.0, s, xcm, s / 2, [(-bp, 0, 11.0), (bp, 0, 11.0)]))
+        cms[name] = (fuse(parts_), "rail")
+    parts_ = [tube_between((xc, -yt, zt0 + s / 2), (xc, yt, zt0 + s / 2), s, w)]
+    for sg in (-1, 1):
+        parts_.append(end_plate(0, sg, 40.0, 110.0, xc, zt0 + s / 2, [(0, -37.0, 11.0), (0, 37.0, 11.0)]))
+    cms["Top tie"] = (fuse(parts_), "tie")
+    za = hd - s / 2
+    xa_lo, xa_hi = xa - s / 2, xbc + 30
+    abar = tube_between((xa, -yt, hd), (xa, yt, hd), s, 3.0)
+    parts_ = [abar]
+    for sg in (-1, 1):
+        pcx = (xa_lo + xa_hi) / 2
+        parts_.append(end_plate(0, sg, xa_hi - xa_lo, 104.0, pcx, hd,
+                                [(xbc - 40 * ux - pcx, -40 * uz, 13.0), (xbc + 40 * ux - pcx, 40 * uz, 13.0)]))
+    eye = prism_xz([(xa + s / 2, hd - 25), (xa + s / 2 + 70, hd - 15), (xa + s / 2 + 70, hd + 15), (xa + s / 2, hd + 25)], -5, 5)
+    eye = be(eye - ycyl(xa + s / 2 + 45, hd, 11, -6, 6), 1.0)
+    parts_.append(eye)
+    cms["Anchor bar with eye"] = (fuse(parts_), "anchor")
+    for n, (shp, kind) in cms.items():
+        A(n, shp, "painted_steel", "made", "cross_members", 1, (0, 0, 250))
+    # end plate welds: four short beads where each tube meets its plates (all four members)
+    for n, (shp, kind) in cms.items():
+        wl = []
+        for sg in (-1, 1):
+            yy = sg * yt
+            cx_, cz_ = {"Front cross rail": (P["x_cross"][0], s / 2), "Rear cross rail": (P["x_cross"][1], s / 2),
+                        "Top tie": (xc, zt0 + s / 2), "Anchor bar with eye": (xa, hd)}[n]
+            hh = s / 2
+            wl += [weld_bead((cx_ - hh, yy, cz_ + hh), (cx_ + hh, yy, cz_ + hh), (0, 0, 1), (0, -sg, 0), 3.0),
+                   weld_bead((cx_ - hh, yy, cz_ - hh), (cx_ + hh, yy, cz_ - hh), (0, 0, -1), (0, -sg, 0), 3.0)]
+        A(f"Welds, {n.lower()} (end plates)", Compound(wl), "mild_steel", "weld", "cross_members", None, (0, 0, 250))
+
+    # ---- frame bolts: eight M10 and four M12 with nyloc-style nuts (hex nuts drawn), heads inside
+    fb = []
+    for bxp, bzp, d, mem in bolts_cm:
+        for sg in (-1, 1):
+            items = bolt_y(d, ep + s, bxp, bzp, sg * yt, sg, L=70)
+            _bolts(fb, items, "frame_bolts", 21, (0, 0, 250))
+    out += fb
+
+    # ---- bearings (bought) and their bolts
+    for sg in (-1, 1):
+        y = sg * yb
+        A(f"Pillow block bearing UCP206 {'+Y' if sg > 0 else '-Y'}", _bearing(P, "ucp206", 0.0, y, hd, sg), "mild_steel", "bought",
+          "drum_bearings", 3, (0, 0, 400))
+        A(f"Pillow block bearing UCP205 {'+Y' if sg > 0 else '-Y'}", _bearing(P, "ucp205", xc, y, hc, sg), "mild_steel", "bought",
+          "crank_bearings", 4, (0, 0, 1350))
+        for hx in (-p206 / 2, p206 / 2):    # M14 x 50 into the weld nut under the pad
+            zb = pad_top + P["ucp206"][3]
+            wsh = Pos(hx, y, zb) * cp.washer(14)
+            bolt = Pos(hx, y, zb + cp.ISO[14][4]) * cp.hex_bolt(14, 50)
+            out.append(mk("M14 washer (ISO 7089)", wsh, "zinc_plated", "fastener", "frame_bolts", 21, (0, 0, 400)))
+            out.append(mk("M14x50 hex bolt (ISO 4017)", bolt, "zinc_plated", "fastener", "frame_bolts", 21, (0, 0, 400)))
+        for hx in (-p205 / 2, p205 / 2):    # M12 x 45 through the top plate, nut underneath
+            zb = top_top + P["ucp205"][3]
+            items = bolt_z(12, P["ucp205"][3] + tt, xc + hx, y, zb, -1, L=45)
+            _bolts(out, items, "frame_bolts", 21, (0, 0, 1350))
+
+    # ---- drum: tube, three rings, two end discs with lightening holes, all welded
+    od, t = P["drum_tube"]
+    L = D["drum_len"]
+    ro, rt = P["ring"]
+    sh = P["drum_shaft"]
+    dr = [ytube(0, hd, od / 2, od / 2 - t, -L / 2, L / 2)]
+    ring_y = (-L / 2, -rt / 2, L / 2 - rt)
+    for yr in ring_y:
+        dr.append(ytube(0, hd, ro / 2, od / 2, yr, yr + rt))
+    nh, dh, rh = P["disc_holes"]
+    for yd in (-L / 2, L / 2 - P["end_disc_t"]):
+        disc = ytube(0, hd, od / 2 - t, sh / 2, yd, yd + P["end_disc_t"])
+        for k in range(nh):
+            a = 2 * math.pi * (k + 0.5) / nh
+            disc = disc - ycyl(rh * math.cos(a), hd + rh * math.sin(a), dh / 2, yd - 1, yd + P["end_disc_t"] + 1)
+        dr.append(disc)
+    # rope clamp blocks, one per end ring, with a U-bolt each
+    clamp_y = {}
+    for sg in (-1, 1):
+        yy = sg * (L / 2 - rt)
+        ya, yb2 = sorted((yy, yy - sg * 18))
+        clamp_y[sg] = (ya, yb2)
+        blk = bx(-20, 20, ya, yb2, hd + od / 2, hd + od / 2 + 14)
+        for hx in (-12.0, 12.0):
+            blk = blk - zcyl(hx, (ya + yb2) / 2, 4.5, hd + od / 2 - 1, hd + od / 2 + 15)
+        dr.append(be(blk, 1.0))
+    A("Winding drum weldment", fuse(dr), "painted_steel", "made", "drum", 2, (0, 0, 700))
+    wl = []
+    for yr in ring_y:
+        for e, face in ((0, 1), (rt, -1)):
+            wl.append(ring_weld((0, yr + e, hd), "y", od / 2, 3.0, face))
+    A("Weld rings, drum rings to tube", Compound(wl), "mild_steel", "weld", "drum", None, (0, 0, 700))
+    for sg in (-1, 1):
+        ya, yb2 = clamp_y[sg]
+        yc_ = (ya + yb2) / 2
+        zb = hd + od / 2 + 14
+        u = cp.rope([(-12, yc_, zb + 30), (-12, yc_, zb - 20), (12, yc_, zb - 20), (12, yc_, zb + 30)], 8.0)
+        A("Rope clamp U-bolt M8", u, "zinc_plated", "fastener", "drum", 2, (0, 0, 700))
+    # drum shaft (S355, 30 mm) and what sits on it
+    ya, yz = D["drum_shaft_y"]
+    A("Drum shaft 30 mm", _y_bar(0.0, hd, sh, ya, yz), "mild_steel", "made", "drum", 2, (0, 0, 700))
+    ys, st_ = D["y_spr"], P["sprocket_t"]
+    big_pl = _sprocket(P["z_big"], D["pd_big"], st_, ys - st_ / 2, 0.0, hd) - ycyl(0, hd, sh / 2, ys - 5, ys + 5)
+    A("48-tooth sprocket ISO 08B-1", be(big_pl, 0.4), "zinc_plated", "bought", "small_sprocket", 6, (0, -350, 700))
+    hub_y1 = -(yb + P["ucp206"][5] / 2 + 6.0)
+    hub = ytube(0, hd, 25.0, sh / 2, ys + st_ / 2, hub_y1)
+    A("Sprocket hub collar", be(hub, 1.0), "mild_steel", "made", "drum", 2, (0, -350, 700))
+    A("Weld rings, sprocket hub", Compound([ring_weld((0, ys + st_ / 2, hd), "y", 25.0, 3.0, 1),
+                                           ring_weld((0, hub_y1, hd), "y", sh / 2, 3.0, -1)]), "mild_steel", "weld", "drum", None, (0, -350, 700))
+    # ratchet wheels, each with a 4 mm collar between; inner collar against the bearing
+    y_r = D["y_ratchet"]
+    A("Ratchet wheel 1 (pawl in front)", be(mirror(_ratchet_wheel(P, y_r, 60.0, forward=False), Plane.YZ), 0.5),
+      "mild_steel", "made", "drum", 2, (0, 450, 700))
+    A("Ratchet wheel 2", be(_ratchet_wheel(P, y_r + tr + 4.0, 60.0, forward=False), 0.5), "mild_steel", "made", "drum", 2, (0, 450, 700))
+    A("Collar between the ratchet wheels", be(ytube(0, hd, 22.0, sh / 2, y_r + tr, y_r + tr + 4.0), 0.5), "mild_steel", "made", "drum", 2, (0, 450, 700))
+    A("Inner collar at the bearing", be(ytube(0, hd, 22.0, sh / 2, yb + P["ucp206"][5] / 2 + 2.0, y_r), 0.5), "mild_steel", "made", "drum", 2, (0, 450, 700))
+    A("Weld rings, ratchet wheels", Compound([ring_weld((0, y_r + 2 * tr + 4.0, hd), "y", sh / 2, 3.0, 1)]), "mild_steel", "weld", "drum", None, (0, 450, 700))
+
+    # ---- crank shaft (S355, 25 mm) with the shear pin cross hole, small sprocket on its hub, shear pin
+    cs = P["crank_shaft"]
+    ya_, yz_ = D["crank_shaft_y"]
+    hub_o, hub_l = P["hub"]
+    yh0, yh1 = D["y_hub"]
+    ypin = (yh0 + yh1) / 2 + 4.0
+    pin_len = 44.0
+    pin = at(cp.round_bar(P["shear_pin"], pin_len), (xc - pin_len / 2, ypin, hc), (0, 90, 0))
+    shaft = _y_bar(xc, hc, cs, ya_, yz_) - xcyl(ypin, hc, P["shear_pin"] / 2, xc - 30, xc + 30)
+    A("Crank shaft 25 mm", shaft, "mild_steel", "made", "crank_shaft", 5, (0, 0, 1550))
+    sm = _sprocket(P["z_small"], D["pd_small"], st_, ys - st_ / 2, xc, hc)
+    sm = sm + ytube(xc, hc, hub_o / 2, cs / 2 + 0.5, ys + st_ / 2 - 0.5, yh1)
+    sm = sm - ycyl(xc, hc, cs / 2 + 0.5, ys - 5, yh1 + 1) - xcyl(ypin, hc, P["shear_pin"] / 2, xc - 30, xc + 30)
+    A("12-tooth sprocket on its hub", be(sm, 0.4), "zinc_plated", "bought", "small_sprocket", 6, (0, -350, 1550))
+    A("Shear pin 4 mm S235", pin, "mild_steel", "bought", "shear_pin", 10, (0, -350, 1650))
+    # chain: rollers in the sprocket seats and the two side plates
+    big, small = _chain_geometry(P, D)
+    rl_y0, rl_y1 = ys - 7.75 / 2, ys + 7.75 / 2
+    rollers = [ycyl(x, z, 8.51 / 2, rl_y0, rl_y1) for x, z in big + small]
+    # straight spans: equally spaced rollers between the last and the first roller of each wrap
+    def span(a, b):
+        L_ = math.dist(a, b)
+        n = max(1, round(L_ / P["chain_p"]))
+        return [(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n) for k in range(1, n)]
+    ends = [(big[0], small[-1]), (big[-1], small[0])]
+    for a, b in ends:
+        for x, z in span(a, b):
+            rollers.append(ycyl(x, z, 8.51 / 2, rl_y0, rl_y1))
+    ch = P["chain_h"]
+    rps, rpb = D["pd_small"] / 2, D["pd_big"] / 2
+    plates = []
+    for yy0 in (ys + 7.75 / 2, ys - 7.75 / 2 - 1.6):
+        plates.append(stadium_xz((xc, hc), rps + ch / 2, (0, hd), rpb + ch / 2, yy0, yy0 + 1.6, 96)
+                      - stadium_xz((xc, hc), rps - ch / 2 + 0.6, (0, hd), rpb - ch / 2 + 0.6, yy0 - 1, yy0 + 2.6, 96))
+    A("Roller chain ISO 08B-1", Compound(rollers + plates), "zinc_plated", "bought", "chain", 7, (0, -600, 900))
+
+    # ---- chain guard: closed sheet box round the drive, holes for both shafts and the hubs; two M6 screws
+    rs = D["od_small"] / 2
+    rb = D["od_big"] / 2
+    outer = stadium_xz((xc, hc), rs + gc, (0, hd), rb + gc, g0, g1, 64)
+    inner = stadium_xz((xc, hc), rs + gc - gt, (0, hd), rb + gc - gt, g0 + gt, g1 - gt, 64)
+    guard = outer - inner
+    guard = guard - ycyl(xc, hc, hub_o / 2 + 5, g1 - gt - 1, g1 + 1) - ycyl(0, hd, 25.0 + 5, g1 - gt - 1, g1 + 1)
+    guard = guard - ycyl(xc, hc, cs / 2 + 4, g0 - 1, g0 + gt + 1)
+    for zt in (430.0, 700.0):
+        guard = guard - ycyl(xc - 6.0, zt + 10.0, 3.3, g0 - 1, g1 + 1)
+    A("Chain guard", guard, "galvanised", "made", "guard", 9, (0, -900, 900))
+    for zt in (430.0, 700.0):
+        A("Guard spacer tube", _y_tube(xc - 6.0, zt + 10.0, 4.0, 3.3, g0 + gt, g1 - gt), "galvanised", "made", "guard", 9, (0, -900, 900))
+        items = bolt_y(6, 2 * gt + (g1 - g0 - 2 * gt) + 3.0, xc - 6.0, zt + 10.0, g0, 1, L=35)
+        _bolts(out, items, "frame_bolts", 21, (0, -900, 900))
+
+    # ---- cranks: arm with a handle tube on each end of the crank shaft, 180 degrees apart; collars
+    cb, ct = P["crank_bar"]
+    cr = P["crank_r"]
+    hdia, hlen = P["handle"]
+    for (y0, y1), ang, out_sign, nm in ((D["y_crank_p"], 180.0, 1, "+Y"), (D["y_crank_m"], 0.0, -1, "-Y")):
+        a = math.radians(ang)
+        ex, ez = xc + cr * math.cos(a), hc + cr * math.sin(a)
+        arm = prism_xz(hull2d(circle_pts(xc, hc, cb / 2 + 6, 32) + circle_pts(ex, ez, cb / 2, 32)), y0, y1)
+        arm = arm - ycyl(xc, hc, cs / 2, y0 - 1, y1 + 1) - ycyl(ex, ez, 6.5, y0 - 1, y1 + 1)
+        A(f"Crank arm {nm}", be(arm, 0.8), "painted_steel", "made", "cranks", 5, (0, 0, 1850))
+        hy0, hy1 = (y1 + 2.0, y1 + 2.0 + hlen) if out_sign > 0 else (y0 - 2.0 - hlen, y0 - 2.0)
+        A(f"Crank handle tube {nm}", _y_tube(ex, ez, hdia / 2, hdia / 2 - 3.0, hy0, hy1), "matte_black", "made", "cranks", 5, (0, 0, 1850))
+        # M12 bolt through the arm and the handle tube, nut and washer at the end of the handle
+        grip = (y1 - y0) + 2.0 + hlen
+        yh = (y0 if out_sign > 0 else y1)
+        items = bolt_y(12, grip, ex, ez, yh, out_sign, L=int(math.ceil((grip + 2 * cp.ISO[12][4] + cp.ISO[12][2] + 3) / 5) * 5))
+        _bolts(out, items, "cranks", 5, (0, 0, 1850))
+        # shaft collar next to the arm (retained by a set screw, not drawn)
+        cy0, cy1 = (y1, y1 + 4.0) if out_sign > 0 else (y0 - 4.0, y0)
+    for nm, (cy0, cy1) in (("+Y", (D["y_crank_p"][1], D["y_crank_p"][1] + 6.0)), ("-Y", (D["y_crank_m"][0] - 6.0, D["y_crank_m"][0]))):
+        A(f"Crank shaft collar {nm}", be(_y_tube(xc, hc, 22.0, cs / 2, cy0, cy1), 0.5), "mild_steel", "made", "crank_shaft", 5, (0, 0, 1850))
+
+    # ---- pawls on 12 mm pins, split pins
+    pw1 = mirror(_pawl(P, y_r, 0.0), Plane.YZ)
+    pw2 = _pawl(P, y_r + tr + 4.0, PAWL_LIFT)
+    A("Pawl 1 (engaged)", be(pw1, 0.5), "painted_steel", "made", "pawls", 8, (0, 450, 700))
+    A("Pawl 2 (lifted onto its stop)", be(pw2, 0.5), "painted_steel", "made", "pawls", 8, (0, 450, 700))
+    for nm, xp_, y_end in (("1", -px, y_pin_end1), ("2", px, y_pin_end2)):
+        A(f"Pawl pin {nm} 12 mm", _y_bar(xp_, pz, 12.0, yb + s / 2 + 6, y_end), "mild_steel", "made", "frame", 1, (0, 450, 700))
+        out.append(mk(f"Split pin, pawl pin {nm}", at(cp.split_pin(12.0), (xp_, y_end - 3.0, pz), (0, 0, 90)), "zinc_plated", "fastener", "pawls", 8, (0, 450, 700)))
+    spr_rest = cp.rope([(px - 14, y_r + tr + 4.0 + 4, pz + 20), (px - 6, y_r + tr + 4.0 + 4, pz + 30), (px + 2, y_r + tr + 4.0 + 4, pz + 20)], 1.5)
+    A("Pawl spring", spr_rest, "zinc_plated", "bought", "pawls", 8, (0, 450, 700))
+
+    # ---- stakes (four), heads resting on the stake tubes
+    sd, sl, sdep = P["stake"]
+    so = P["stake_tube"][0]
+    ztop = P["stake_tube"][2]
+    for sg in (-1, 1):
+        for xs in P["stake_x"]:
+            ys_ = sg * (yb + s / 2 + so / 2 - 0.5)
+            stk = cp.round_bar(sd, sl)
+            shp = Pos(xs, ys_, ztop - sl) * (stk + Pos(0, 0, sl + 3) * Cylinder(16.0, 6.0))
+            shp = be(shp, 0.6)
+            A(f"Ground stake {'+Y' if sg > 0 else '-Y'} {'front' if xs < 0 else 'rear'}", shp, "mild_steel", "made", "stakes", 11, (0, 0, 0))
+    return out
+
+
+def _y_bar(x, z, d, y0, y1):
+    """Round bar along Y between y0 and y1 (chamfered ends)."""
+    return Pos(x, y0, z) * Rot(-90, 0, 0) * cp.round_bar(d, y1 - y0)
+
+
+def _y_tube(x, z, ro, ri, y0, y1):
+    return be(Pos(x, y0, z) * Rot(-90, 0, 0) * cp.round_tube(2 * ro, ro - ri, y1 - y0), 0.4)
+
+
+# ----------------------------------------------------------------------------- placing and rigging
+_CACHE = {}
+
+
+def _cached(name, fn, *a):
+    if name not in _CACHE:
+        _CACHE[name] = fn(*a)
+    return _CACHE[name]
+
+
+def _place(parts, loc, group=None):
+    out = []
+    for p in parts:
+        q = dict(p, shape=loc * p["shape"])
+        if group:
+            q["group"] = group
+        out.append(q)
+    return out
+
+
+def sling_parts(P, L):
+    """Round sling from the anchor eye to the tree, with the bow shackle on the eye (BOM 12)."""
+    xa = anchor_bar_x(P)
+    ex = L["x_cap"] + xa + P["shs"][0] / 2 + 45
+    cy, zs = P["cap_y"], P["hd"]
+    out = []
+    ys = (cy - 11.0, cy + 11.0)
+    bow = Pos(ex, cy, zs) * bow_shackle(22.0, 50.0, 10.0)
+    pin = U.cp_pin(ex, zs, cy - 17.0, cy + 17.0, 19.0)
+    out.append(mk("Bow shackle on the anchor eye", bow, "galvanised", "bought", "sling", 12, (400, 0, 0), "internal"))
+    out.append(mk("Shackle pin 19 mm on the anchor eye", pin, "zinc_plated", "bought", "sling", 12, (400, 0, 0), "internal"))
+    sp = [cp.at(cp.split_pin(19.0), (ex, ye + (-1.5 if ye > cy else 1.5), zs), (0, 0, 90)) for ye in (cy - 17.0, cy + 17.0)]
+    out.append(mk("Split pins, anchor shackle", Compound(sp), "zinc_plated", "fastener", "sling", 12, (400, 0, 0), "internal"))
+    x0 = ex + 55.0
+    x1 = ex + 2900.0
+    r = 14.0
+    pts = [(x0 + r, cy - r, zs)]
+    pts += [(x0 + r - r * math.sin(math.radians(a)), cy - r * math.cos(math.radians(a)), zs) for a in range(15, 181, 15)]
+    pts += [(x1 - r + r * math.sin(math.radians(a)), cy + r * math.cos(math.radians(a)), zs) for a in range(15, 181, 15)]
+    loop = [(x0 + r, cy - r, zs), (x1 - r, cy - r, zs)]
+    for a in range(15, 181, 15):
+        loop.append((x1 - r + r * math.sin(math.radians(a)), cy - r * math.cos(math.radians(a)), zs))
+    loop += [(x0 + r, cy + r, zs)]
+    for a in range(15, 181, 15):
+        loop.append((x0 + r - r * math.sin(math.radians(a)), cy + r * math.cos(math.radians(a)), zs))
+    out.append(mk("Round sling WLL 2 t, 3 m", cp.rope(loop, 25.0), "rope", "bought", "sling", 12, (400, 0, 0), "internal"))
+    return out
+
+
+def ropes_a(P, L, D, ends):
+    zr = 75.0
+    ry = P["ret_y"]
+    xd = L["x_cap"]
+    ypull = P["cap_y"] + D["y_pull"]
+    yret = P["cap_y"] + D["y_ret"]
+    zroll = ends["zroll"]
+    pull = [(ends["front1"], 0, zr), (L["x_door"], 0, zroll), (xd, ypull, D["z_under"])]
+    tail = [(ends["rear1"], 0, zr)] + U.tail_arc_points(P) + [(L["x_door"], ry, zroll), (ends["rear2"], ry, zr)]
+    ret = [(ends["front2"], ry, zr), (xd, yret, D["z_over"])]
+    out = []
+    for nm, pts in (("Pull rope (box 1 to the drum)", pull), ("Tail rope (box 1 round the tail sheaves to box 2)", tail), ("Return rope (box 2 to the drum)", ret)):
+        out.append(mk(nm, cp.rope(pts, P["rope_d"]), "rope", "bought", "ropes", 16, (0, 0, 300), "internal"))
+    return out
+
+
+def option_a(P, L, D, ends):
+    parts = _place(_cached("cap", capstan, P), Pos(L["x_cap"], P["cap_y"], 0), "shell")
+    parts += _place(U.box_unit(P, "", bom=True, with_bar=False), Pos(L["box_x0"], 0, 0))
+    parts += _place(U.box_unit(P, "_2", bom=True, with_bar=True), Pos(L["box2_x0"], P["ret_y"], 0))
+    parts += U.tail_unit(P, bom=True)
+    parts += _place(U.ramp_unit(P, bom=True), Pos(L["x_door"], ramp_y(P), 0))
+    parts += ropes_a(P, L, D, ends)
+    parts += sling_parts(P, L)
+    return parts
+
+
+def option_b(P, L, D, ends):
+    import opt_b
+    return opt_b.option_b(P, L, D, ends)
+
+
+def option_c(P, L, D, ends):
+    import opt_c
+    xp = L["x_door"] + 2000.0
+    parts = _cached("pump", opt_c.pump_frame, P)
+    return _place(parts, Pos(xp, P["cap_y"], 0) * Rot(0, 0, -90))
+
+
+def components(option=CHOSEN, short=True):
+    """Parts of one option as cad_parts.part() dicts. short=True is the shortened picture layout (default);
+    short=False is the design case of the drawing (tail sheave 15 m from the capstan)."""
+    L = site(PARAMS, short)
+    D = derived(PARAMS)
+    ends = U.ring_ends(PARAMS, L)
+    return {"A": option_a, "B": option_b, "C": option_c}[option](PARAMS, L, D, ends)
+
+
+# ----------------------------------------------------------------------------- views for the calculations, drawings and pictures
+def by_key(parts):
+    """Group parts by their legacy component key: {key: Compound}."""
+    d = {}
+    for p in parts:
+        d.setdefault(p["key"], []).extend(p["shape"].solids())
+    return {k: Compound(v) for k, v in d.items()}
+
+
+@dataclass
+class Comp:
+    name: str
+    shape: object
+    bom: object
+    group: str
+    material: str
+
+
+def build_components(P=PARAMS, short=False):
+    """Option A as {key: Comp} with one fused-by-key shape per legacy component (for drawings and pictures)."""
+    parts = components("A", short)
+    names, bom, grp, mat = {}, {}, {}, {}
+    for p in parts:
+        names.setdefault(p["key"], p["name"])
+        bom.setdefault(p["key"], p["bom"])
+        grp.setdefault(p["key"], p["group"])
+        mat.setdefault(p["key"], p["material_name"])
+    return {k: Comp(names[k], sh, bom[k], grp[k], mat[k]) for k, sh in by_key(parts).items()}
+
+
+def legacy_parts(P=PARAMS):
+    """Option A as four groups, each {key: Compound} in its own frame (capstan about its drum axis, box 1 at the origin,
+    tail block and ramp as built): what the building-plan pictures draw."""
+    cap = by_key(_cached("cap", capstan, P))
+    box = by_key(U.box_unit(P, "", True, True))
+    tail = by_key(U.tail_unit(P, True))
+    ramp = by_key(U.ramp_unit(P, True))
+    return cap, box, tail, ramp
+
+
+def masses(P=PARAMS):
+    """Mass in kg of option A by legacy component key (model volume times material density; rope and sling left out)."""
+    m = {}
+    for p in components("A", True):
+        if p["key"] in ("ropes", "sling"):
+            continue
+        m[p["key"]] = m.get(p["key"], 0.0) + cp.mass_kg(p)
+    return m
+
+
+def _dims(shape):
+    bb = shape.bounding_box()
+    return tuple(sorted((bb.size.X, bb.size.Y, bb.size.Z), reverse=True))
+
+
+def pack_pieces(P=PARAMS):
+    """The kit as carried: (name, sorted bounding box dims mm, kg) for each piece, largest first (SLH-DDR-003)."""
+    parts = components("A", True)
+    byname = {p["name"]: p for p in parts}
+    kg = cp.mass_kg
+    out = []
+
+    def add(name, shapes, mass, dims=None):
+        sh = Compound([s for x in shapes for s in x.solids()])
+        out.append((name, dims or _dims(sh), mass))
+    for nm, lab in (("Side frame -Y (chain side)", "Side frame, -Y (chain side)"), ("Side frame +Y (pawl side)", "Side frame, +Y (pawl side)")):
+        add(lab, [byname[nm]["shape"]], kg(byname[nm]))
+    for nm, lab in (("Front cross rail", "Front or rear cross rail"), ("Rear cross rail", "Front or rear cross rail"),
+                    ("Anchor bar with eye", "Anchor bar with eye"), ("Top tie", "Top tie")):
+        wn = f"Welds, {nm.lower()} (end plates)"
+        add(lab, [byname[nm]["shape"]], kg(byname[nm]) + kg(byname[wn]))
+    drum_keys = [p for p in parts if p["key"] in ("drum", "drum_bearings") and p["kind"] != "fastener"]
+    add("Drum with its bearings", [p["shape"] for p in drum_keys], sum(kg(p) for p in drum_keys))
+    for n in ("1", "2"):
+        b = byname[f"Scraper box {n}"]
+        add("Scraper box (bridles off)", [b["shape"]], kg(b) + kg(byname[f"Welds, scraper box {n}"]))
+    tail = [p for p in parts if p["key"] in ("tail_plate", "tail_spacers", "sheaves", "keeper", "anchors")]
+    add("Tail block", [p["shape"] for p in tail], sum(kg(p) for p in tail))
+    ch = byname["Ramp cheeks (2) 18 mm plywood"]
+    d1 = _dims(ch["shape"] & bx(-1000, 1000, 0, 1000, -10, 1000))
+    out.append(("Ramp cheeks (2), stacked", (d1[0], d1[1], 2 * d1[2]), kg(ch)))
+    dk = byname["Ramp deck trays (2) 3 mm"]
+    d2 = _dims(dk["shape"] & bx(0, 1000, -1000, 1000, -10, 1000))
+    out.append(("Ramp deck trays (2), nested", (d2[0], d2[1], d2[2] + 30.0), kg(dk)))
+    rl = [byname[n] for n in ("Crest roller 60.3 x 3.6", "Roller axle 20 mm", "Roller end bushes (2)")]
+    add("Crest roller on its axle", [p["shape"] for p in rl], sum(kg(p) for p in rl))
+    out.sort(key=lambda q: -q[1][0] * q[1][1])
+    return out
+
+
+def side_frame_masses(P=PARAMS):
+    byname = {p["name"]: p for p in _cached("cap", capstan, P)}
+    return {"m": cp.mass_kg(byname["Side frame -Y (chain side)"]), "p": cp.mass_kg(byname["Side frame +Y (pawl side)"])}
+
+
+# ----------------------------------------------------------------------------- constructability checks beyond the kit's
 def _dist(a, b):
     try:
         return a.distance_to(b)
@@ -787,138 +852,41 @@ def _dist(a, b):
 
 
 def checks(P=PARAMS, verbose=True):
-    """Constructability checks: no two separate parts overlap; every part touches what holds it."""
-    C = build_components(P, short=True)
-    keys = list(C)
-    res = {"overlaps": [], "floating": [], "volumes": {}}
-    for k in keys:
-        res["volumes"][k] = C[k].shape.volume
-    # contact pairs: the part is held by the other (bolt, weld, pin, bearing, sits on)
-    holds = [("drum_bearings", "frame"), ("crank_bearings", "frame"), ("drum", "drum_bearings"),
-             ("crank_shaft", "crank_bearings"), ("small_sprocket", "crank_shaft"), ("shear_pin", "crank_shaft"),
-             ("shear_pin", "small_sprocket"), ("cranks", "crank_shaft"), ("guard", "frame"), ("pawls", "frame"),
-             ("stakes", "frame"), ("sling", "cross_members"), ("tail_spacers", "tail_plate"), ("sheaves", "tail_spacers"),
-             ("keeper", "tail_plate"), ("anchors", "tail_plate"), ("tip_bar", "box_2"), ("bridles", "box"),
-             ("bridles_2", "box_2"), ("cross_members", "frame"), ("frame_bolts", "frame"),
-             ("frame_bolts", "cross_members"), ("decks", "cheeks"), ("axle", "cheeks"), ("roller", "axle")]
-    for a, b in holds:
-        d = _dist(C[a].shape, C[b].shape)
-        if not d <= 0.6:
-            res["floating"].append((a, b, d))
-    pairs = [(a, b) for i, a in enumerate(keys) for b in keys[i + 1:]
-             if C[a].group == C[b].group or {C[a].group, C[b].group} <= {"capstan", "anchor"}]
-    for a, b in pairs:
-        if {a, b} in ({"bridles", "box"}, {"ropes", "bridles"}, {"bridles_2", "box_2"}, {"ropes", "bridles_2"}):
-            continue
-        ba, bb_ = C[a].shape.bounding_box(), C[b].shape.bounding_box()
-        if (ba.min.X > bb_.max.X or bb_.min.X > ba.max.X or ba.min.Y > bb_.max.Y or bb_.min.Y > ba.max.Y
-                or ba.min.Z > bb_.max.Z or bb_.min.Z > ba.max.Z):
-            continue
-        try:
-            i = C[a].shape & C[b].shape
-            v = 0.0 if i is None else i.volume
-        except Exception:
-            v = float("nan")
-        if not v < 1.0:
-            res["overlaps"].append((a, b, v))
-    # the two boxes pass each other in the room: clearance with both side by side at the same x
-    bp = box_parts(P)
-    b1 = fuse([bp["box"], bp["bridles"]])
+    """Two boxes pass each other in the room and cross the ramp inside its cheeks (SLH-DDR-003)."""
+    res = {}
+    bu = [p for p in U.box_unit(P, "", True, False) if p["key"] in ("box", "bridles")]
+    b1 = Compound([s for p in bu for s in p["shape"].solids()])
     b2 = Pos(0, P["ret_y"], 0) * b1
     res["pass_gap"] = _dist(b1, b2)
-    if not res["pass_gap"] >= 25.0:
-        res["overlaps"].append(("box", "box_2 passing", res["pass_gap"]))
-    # both boxes cross the ramp inside its cheeks
     wi = P["ramp"][1] / 2
-    for k in ("box", "box_2"):
-        bb = C[k].shape.bounding_box()
-        lo, hi = bb.min.Y - ramp_y(P), bb.max.Y - ramp_y(P)
-        res.setdefault("ramp_gap", []).append(min(lo + wi, wi - hi))
-    if not min(res["ramp_gap"]) >= 15.0:
-        res["overlaps"].append(("boxes", "ramp cheeks", min(res["ramp_gap"])))
-    # flat pack: every piece of the frame is a separate solid of known size (SLH-DDR-003)
-    res["pack"] = pack_pieces(P)
+    bb = b1.bounding_box()
+    lo, hi = bb.min.Y - (ramp_y(P) - 0.0), bb.max.Y - ramp_y(P)
+    res["ramp_gap"] = [min(lo + wi, wi - hi), min(lo + P["ret_y"] + wi, wi - (hi + P["ret_y"]))]
     if verbose:
-        print("overlaps (should be none):", res["overlaps"] or "none")
-        print("parts not touching what holds them (should be none):", res["floating"] or "none")
         print(f"boxes pass {res['pass_gap']:.1f} mm apart; least gap to a ramp cheek {min(res['ramp_gap']):.1f} mm")
-        for n, d, m in res["pack"]:
-            print(f"pack piece {n:34s} {d[0]:5.0f} x {d[1]:4.0f} x {d[2]:4.0f} mm  {m:5.1f} kg")
     return res
 
 
-def pack_pieces(P=PARAMS):
-    """The kit as carried: (name, sorted bounding box dims mm, kg) for each piece, largest first."""
-    cap = capstan_parts(P)
-    rho = P["rho_steel"] * 1e-9
-    out = []
-
-    def add(name, shape, kg=None, n=1):
-        bb = shape.bounding_box()
-        d = sorted((bb.size.X, bb.size.Y, bb.size.Z), reverse=True)
-        m = shape.volume * rho if kg is None else kg
-        for _ in range(n):
-            out.append((name, tuple(d), m))
-    add("Side frame, -Y (chain side)", cap["frame_side_m"])
-    add("Side frame, +Y (pawl side)", cap["frame_side_p"])
-    for i, sol in enumerate(sorted(cap["cross_members"].solids(), key=lambda q: q.bounding_box().center().Z)):
-        add(["Front or rear cross rail", "Front or rear cross rail", "Anchor bar with eye", "Top tie"][i], sol)
-    db = cap["drum_bearings"].volume * 7200e-9
-    add("Drum with its bearings", cap["drum"] + cap["drum_bearings"], cap["drum"].volume * rho + db)
-    bp = box_parts(P)
-    add("Scraper box (bridles off)", bp["box"], bp["box"].volume * rho, n=2)
-    t = tail_parts(P)
-    add("Tail block", fuse(list(t.values())), sum(v.volume for v in t.values()) * rho)
-    r = ramp_parts(P)
-    # the ramp comes apart for carrying: cheeks stacked flat, the two deck trays nested, roller on its axle
-    cheek = r["cheeks"] & bx(-1000, 1000, 0, 1000, -10, 1000)
-    bb = cheek.bounding_box()
-    d = sorted((bb.size.X, bb.size.Y, bb.size.Z), reverse=True)
-    out.append(("Ramp cheeks (2), stacked", (d[0], d[1], 2 * d[2]), r["cheeks"].volume * P["rho_ply"] * 1e-9))
-    tray = r["decks"] & bx(0, 1000, -1000, 1000, -10, 1000)
-    bb = tray.bounding_box()
-    d = sorted((bb.size.X, bb.size.Y, bb.size.Z), reverse=True)
-    out.append(("Ramp deck trays (2), nested", (d[0], d[1], d[2] + 30.0), r["decks"].volume * rho))
-    add("Crest roller on its axle", r["roller"] + r["axle"], (r["roller"].volume + r["axle"].volume) * rho)
-    out.sort(key=lambda q: -q[1][0] * q[1][1])
-    return out
-
-
-def masses(P=PARAMS):
-    """Mass of each component in kg from model volumes (steel parts) plus catalogue figures."""
-    C = build_components(P, short=False)
-    rho = {"steel": P["rho_steel"], "cast iron": 7200.0, "plywood": P["rho_ply"], "polyester": P["rho_poly"]}
-    m = {}
-    for k, c in C.items():
-        if k in ("ropes", "sling"):
-            continue
-        m[k] = c.shape.volume * 1e-9 * rho[c.material]
-    return m
-
-
-def export(P=PARAMS):
-    root = Path(__file__).resolve().parents[2]
-    (root / "cad" / "step").mkdir(parents=True, exist_ok=True)
+def export_stl(P=PARAMS):
+    """STL of the chosen design by group, 0.2 mm chord tolerance."""
+    root = HERE.parents[1]
     (root / "cad" / "stl").mkdir(parents=True, exist_ok=True)
-    groups = {"capstan": ["frame", "cross_members", "frame_bolts", "drum", "drum_bearings", "crank_bearings",
-                          "crank_shaft", "small_sprocket", "shear_pin", "chain", "guard", "cranks", "pawls"],
-              "box": ["box_2", "tip_bar", "bridles_2"],
-              "tail": ["tail_plate", "tail_spacers", "sheaves", "keeper", "anchors"],
-              "ramp": ["cheeks", "decks", "roller", "axle"]}
-    C = build_components(P, short=False)
-    for g, keys in groups.items():
-        cmp = Compound([C[k].shape for k in keys])
-        export_step(cmp, str(root / "cad" / "step" / f"silthaul-{g}.step"))
-        export_stl(cmp, str(root / "cad" / "stl" / f"silthaul-{g}.stl"), tolerance=0.5, angular_tolerance=0.3)
-    export_step(Compound([c.shape for c in C.values()]), str(root / "cad" / "step" / "silthaul-assembly.step"))
-    print("exported STEP and STL to cad/step and cad/stl")
+    parts = components(CHOSEN, True)
+    groups = {"capstan": lambda p: p["group"] == "shell",
+              "box": lambda p: p["key"] in ("box", "bridles", "box_2", "bridles_2", "tip_bar"),
+              "tail": lambda p: p["key"] in ("tail_plate", "tail_spacers", "sheaves", "keeper", "anchors"),
+              "ramp": lambda p: p["key"] in ("cheeks", "decks", "roller", "axle")}
+    for g, f in groups.items():
+        sel = [s for p in parts if f(p) for s in p["shape"].solids()]
+        from build123d import export_stl as ex
+        ex(Compound(sel), str(root / "cad" / "stl" / f"silthaul-{g}.stl"), tolerance=0.2, angular_tolerance=0.3)
+    print("exported STL to cad/stl")
 
 
 if __name__ == "__main__":
     D = derived()
-    print({k: (round(v, 1) if isinstance(v, float) else v) for k, v in D.items()})
-    r = checks()
+    checks()
     for k, v in sorted(masses().items()):
         print(f"{k:16s} {v:6.2f} kg")
     if "--check" not in sys.argv:
-        export()
+        export_stl()

@@ -17,17 +17,13 @@ sys.path[:0] = [str(ROOT / ".kit"), str(ROOT / "cad" / "src")]
 import build_views as bv  # noqa: E402
 from build_views import Part  # noqa: E402
 from build123d import Box, Pos, Rot  # noqa: E402
-from model import (PARAMS as P, derived, capstan_parts, box_parts, tail_parts, ramp_parts,  # noqa: E402
-                   build_components, anchor_bar_x, bx)
+from model import PARAMS as P, derived, legacy_parts, build_components, anchor_bar_x, bx  # noqa: E402
 
 OUT = ROOT / "docs" / "05-build-plan"
 DWG = ROOT / "cad" / "drawings"
 DATE = "2026-10-03"
 D = derived(P)
-CAP = capstan_parts(P)
-BOX = box_parts(P)
-TAIL = tail_parts(P)
-RAMP = ramp_parts(P)
+CAP, BOX, TAIL, RAMP = legacy_parts(P)       # the 245-part option A model, grouped by component
 
 COL = {"frame": "#0F766E", "drum": "#C2410C", "drum_bearings": "#374151", "crank_bearings": "#4B5563",
        "crank_shaft": "#6B7280", "small_sprocket": "#B45309", "shear_pin": "#DC2626", "chain": "#78716C",

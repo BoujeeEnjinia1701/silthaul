@@ -33,7 +33,7 @@ Drags flood mud out of homes, lanes and drains with a hand-capstan scraper inste
 
 ## Summary
 
-SiltHaul is a hand-powered slusher for flooded buildings. Two steel scraper boxes, each 210 mm wide and holding about 40 L, are tied into a rope loop that runs from a hand capstan outside, through the doorway, round a tail sheave block anchored to the floor at the far end of the room, and back. Cranking one way drags one loaded box out through the door to a dump point while the other comes back empty; cranking the other way swaps them, so mud goes out on every stroke (SLH-DDR-003). Two people at the cranks need 63 N each; nobody lifts or carries mud out of the building. The design is constructable, its frame packs flat, its parts cost about USD 1,056 against a USD 2,000 value-engineering target, and its heaviest lift is 23.1 kg. On paper it moves about 0.51 m³ an hour with a crew of four and a rest allowance, 0.57 times a bucket crew (SLH-CAL-001).
+SiltHaul is a hand-powered slusher for flooded buildings. Two steel scraper boxes, each 210 mm wide and holding about 40 L, are tied into a rope loop that runs from a hand capstan outside, through the doorway, round a tail sheave block anchored to the floor at the far end of the room, and back. Cranking one way drags one loaded box out through the door to a dump point while the other comes back empty; cranking the other way swaps them, so mud goes out on every stroke (SLH-DDR-003). Two people at the cranks need 63 N each; nobody lifts or carries mud out of the building. The design is constructable, its frame packs flat, its parts cost about USD 1,056 against a USD 2,000 value-engineering target, and its heaviest lift is 22.2 kg. On paper it moves about 0.51 m³ an hour with a crew of four and a rest allowance, 0.57 times a bucket crew (SLH-CAL-001).
 
 ## How it works
 
@@ -49,7 +49,7 @@ SiltHaul is a hand-powered slusher for flooded buildings. Two steel scraper boxe
 
 | # | Component | What it is |
 | --- | --- | --- |
-| 1 | Capstan frame | Flat-pack, 40 mm square tube: two welded side frames (890 x 814 mm, 9.2 and 9.6 kg) with bearing pads, stake tubes and pawl brackets, joined by four bolted cross members including an anchor bar and eye at drum height |
+| 1 | Capstan frame | Flat-pack, 40 mm square tube: two welded side frames (890 x 814 mm, 9.3 and 9.6 kg) with bearing pads, stake tubes and pawl brackets, joined by four bolted cross members including an anchor bar and eye at drum height |
 | 2 | Winding drum | 219.1 mm tube in two halves of 21 turns each, on a 30 mm shaft, with a 48-tooth sprocket and two opposite ratchet wheels; 19.0 kg |
 | 3, 4 | Bearings | UCP206 pillow blocks for the drum, UCP205 for the crank shaft |
 | 5 | Crank shaft and cranks | 25 mm shaft 850 mm up, two 250 mm cranks set 180 degrees apart |
@@ -78,7 +78,7 @@ SiltHaul is a hand-powered slusher for flooded buildings. Two steel scraper boxe
 | Overload limit | Shear pin releases at about 2,450 N; all parts sized on 3,000 N |
 | Rope | Factor 18 on the working pull, 5.4 on the limit |
 | Tail block | 0.45 of recommended anchor loads at the limit |
-| Heaviest lift | Drum with bearings 23.1 kg; box 16.1 kg |
+| Heaviest lift | Drum with bearings 22.2 kg; box 16.2 kg |
 | Cost | Value-engineering target: USD 2,000. Estimated cost of the constructable design: USD 1,055.60 (USD 944.40 under the target) |
 
 ![Figure 2. Energy per haul](../media/flow.png)

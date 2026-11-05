@@ -1,7 +1,9 @@
 """SiltHaul concept media (TRL 3, constructable design SLH-DDR-002), generated from the parametric model.
 
-Run from the repo root:  python cad/src/concept_media.py
-Takes every component from cad/src/model.py in the shortened picture layout (tail sheave, box,
+Run from the repo root:  python cad/src/concept_media.py [web]
+With no argument it renders the whole media set; with `web` it writes only media/model.glb and viewer.html
+(so the web model stays under about 20 MB on a small machine). Takes every component from cad/src/model.py
+(the 245-part option A, grouped by component for the pictures) in the shortened picture layout (tail sheave, box,
 doorway ramp and capstan closer together than on site) and renders the media set with
 .kit/concept.py: hero, exploded view with BOM callouts, concept blueprint, energy flow per trip,
 and the web model (model.glb with viewer.html). Coloured parts carry the BOM line numbers of
@@ -16,7 +18,7 @@ sys.path[:0] = [str(ROOT / ".kit"), str(ROOT / "cad" / "src")]
 from build123d import Box, Pos, Compound, Color, export_gltf  # noqa: E402
 import matplotlib.colors as mc  # noqa: E402
 from concept import Part, render_all, human_figure  # noqa: E402
-from model import PARAMS as P, build_components, context_shapes  # noqa: E402
+from model import PARAMS as P, build_components, context_shapes, bx  # noqa: E402
 
 C = build_components(P, short=True)
 X = context_shapes(P, short=True)
@@ -65,21 +67,23 @@ for key, comp in C.items():
 
 L = P["short"]
 person = human_figure(1750.0, x=L["x_cap"] + P["xc"], y=P["cap_y"] + 1000.0, z=0.0)
-context = [Part("Wall, doorway and threshold (site)", X["wall"] + X["threshold"], "#D1D5DB"),
-           Part("Tree used as the anchor (site)", X["tree"], "#A8A29E"), person]
+ABOVE_GROUND = bx(-1e5, 1e5, -1e5, 1e5, 0.0, 1e4)       # the site parts reach below the floor; the pictures show only the part above it
+context = [Part("Wall, doorway and threshold (site)", (X["wall"] + X["threshold"]) & ABOVE_GROUND, "#D1D5DB"),
+           Part("Tree used as the anchor (site)", X["tree"] & ABOVE_GROUND, "#A8A29E"), person]
 
 flow = {"title": "energy per 11 m stroke: one full 40 L box out, the empty box back, kJ (SLH-CAL-001 estimates)", "unit": "kJ",
         "stages": [("Two people at the cranks", 11.7), ("Drum and rope", 10.7), ("Both boxes moved 11 m", 10.7),
                    ("Mud delivered to the dump", "40 L, 69 kg")],
         "losses": [(0, "Chain and bearings", 1.0), (1, "Floor friction, full box", 6.5), (2, "Lip cutting and empty box", 4.2)]}
 
-outs = render_all(
+WEB_ONLY = len(sys.argv) > 1 and sys.argv[1] == "web"
+outs = {} if WEB_ONLY else render_all(
     parts, project="SiltHaul", title="Hand-capstan mud scraper concept", dwg_no="SLH-DWG-010",
     key_figures=["Two boxes on the loop: every stroke hauls mud out",
                  "Boxes 210 mm wide, 40.3 L each; about 86 kg full",
                  "4:1 chain drive, two 250 mm cranks: 63 N each at 1.0 kN",
                  "About 17 strokes, 0.68 m3 an hour (0.51 with rest)",
-                 "Flat-pack frame; heaviest lift 23.1 kg; parts USD 1,056",
+                 "Flat-pack frame; heaviest lift 22.2 kg; parts USD 1,056",
                  "Layout shortened; on site up to 15 m tail to capstan"],
     scale_figure=False, context=context, cut=False, web_model=False, flow=flow)
 

@@ -3,9 +3,9 @@ doc_id: SLH-CAL-001
 title: SiltHaul sizing calculations
 project: SiltHaul
 doc_type: Calculation
-version: "0.4"
+version: "0.5"
 status: Draft
-date: '2026-10-03'
+date: 2026-11-03
 author: Amish Chadha
 license: CERN-OHL-S-2.0
 revisions:
@@ -25,17 +25,21 @@ revisions:
   date: '2026-10-03'
   author: Amish Chadha
   change: "R9 restated per Amish's round-2 decision 2A (SLH-DDR-004); no numbers changed"
+- version: "0.5"
+  date: 2026-11-03
+  author: Amish Chadha
+  change: "Kit 1.9.1: rerun on the 245-part model (heaviest lift 22.2 kg, side frame 9.3 kg, kit 407 L, capstan 65.5 kg; no design dimension changed); requirements renumbered PR-001 to PR-012 (SLH-PRS-001); product requirement map added"
 ---
 
 # SiltHaul sizing calculations
 
-On paper SiltHaul now meets its output requirement as Amish restated it on 2026-10-03 (SLH-DDR-003, decision 2A): "no lifting or carrying of mud; output at least 0.5 times the same crew with shovels and buckets". A second box rides on the return leg of the rope loop, so every stroke hauls one full box out while the other goes back empty to be filled. A crew of four moves about 0.68 m³ an hour, 0.51 m³ an hour with a rest allowance, against about 0.90 m³ an hour for a bucket crew of the same four people: a ratio of 0.57 against the 0.5 asked. One box alone gave 0.43 m³ an hour. The two boxes are 210 mm wide inside so that they pass each other 42 mm apart in the room and both cross the doorway ramp in a 0.7 m door; each holds 40.3 L. Two people at the cranks need 63 N each at the 1,000 N working pull, the rope and every anchor keep a factor of at least 5 on the rope tension that the shear pin allows, and the frame now packs flat (decision 7A): two side frames of 9.2 and 9.6 kg and four bolted cross members, with the drum and its bearings the heaviest lift at 23.1 kg. The kit packs into about 454 L, 77 % of a small hatchback's boot with the rear seats folded. Value-engineering target: USD 2,000. Estimated cost of the constructable design: USD 1,055.60 (USD 944.40 under the target). Eleven of the twelve requirements are met on paper or by design, and one, R8 (setup time, now at its 20 min limit), can only be verified by a timed trial. Every number in this note is printed by `docs/04-calcs/sizing.py`; the tag in brackets, for example [B3], is the line of that script's output that carries it.
+On paper SiltHaul now meets its output requirement as Amish restated it on 2026-10-03 (SLH-DDR-003, decision 2A): "no lifting or carrying of mud; output at least 0.5 times the same crew with shovels and buckets". A second box rides on the return leg of the rope loop, so every stroke hauls one full box out while the other goes back empty to be filled. A crew of four moves about 0.68 m³ an hour, 0.51 m³ an hour with a rest allowance, against about 0.90 m³ an hour for a bucket crew of the same four people: a ratio of 0.57 against the 0.5 asked. One box alone gave 0.43 m³ an hour. The two boxes are 210 mm wide inside so that they pass each other 42 mm apart in the room and both cross the doorway ramp in a 0.7 m door; each holds 40.3 L. Two people at the cranks need 63 N each at the 1,000 N working pull, the rope and every anchor keep a factor of at least 5 on the rope tension that the shear pin allows, and the frame now packs flat (decision 7A): two side frames of 9.3 and 9.6 kg and four bolted cross members, with the drum and its bearings the heaviest lift at 22.2 kg. The kit packs into about 407 L, 69 % of a small hatchback's boot with the rear seats folded. Value-engineering target: USD 2,000. Estimated cost of the constructable design: USD 1,055.60 (USD 944.40 under the target). Eleven of the twelve requirements are met on paper or by design, and one, R8 (setup time, now at its 20 min limit), can only be verified by a timed trial. Every number in this note is printed by `docs/04-calcs/sizing.py`; the tag in brackets, for example [B3], is the line of that script's output that carries it.
 
 > **Safety:** SiltHaul is a rope-and-anchor system under tension with a hand-cranked chain drive. A failed anchor, rope or shackle can whip, and the chain, sprockets and cranks can trap fingers. These are first-principles estimates for a paper proof of concept; they do not show that any part is safe. Every anchor, the rope and the capstan must be proof-loaded before use (SLH-BLD-001, section 6), and nobody stands in the line of a rope or beside a sheave while the cranks turn. See SLH-PRC-001, Safety.
 
 ## Scope and method
 
-The note checks every requirement in SLH-REQ-001 v0.4 against the design in SLH-PRC-001 v0.3 and the parametric model `cad/src/model.py`. The script imports the model's `PARAMS`, `derived()` and `masses()`, so the drum, frame, box and tail block used here are the ones in the STEP files and drawings SLH-DWG-001 and 002. It also reads `bom/bom.csv` and `budget_usd` in `project.yaml`, and writes `docs/04-calcs/results.csv`.
+The note checks every requirement in SLH-PRS-001 v0.6 against the design in SLH-PRC-001 v0.3 and the parametric model `cad/src/model.py`. The script imports the model's `PARAMS`, `derived()` and `masses()`, so the drum, frame, box and tail block used here are the ones in the STEP files and drawings SLH-DWG-001 and 002. It also reads `bom/bom.csv` and `budget_usd` in `project.yaml`, and writes `docs/04-calcs/results.csv`.
 
 The design case is a ground-floor room 7 m long, with the tail sheave block at the far wall, the doorway threshold 7 m from it and the capstan drum 15 m from it (R5). Box 1, on the pull rope, is hauled 11 m from the far end of the room to a dump point outside, while box 2, on the return rope, comes back 11 m from its dump point to the far end of the room; the next stroke reverses them. A 12.5 m tail rope joins the two boxes round the tail sheaves.
 
@@ -81,6 +85,8 @@ At 30 rpm on the cranks the rope moves 5.40 m a minute with a full box going out
 | Shovels and buckets (two filling, two carrying) | 0.90 m³/h | All four; each cubic metre is 1.7 t lifted about 1 m and about 2.2 km walked carrying 10 L buckets |
 | SiltHaul, two boxes (two cranking and dumping, two loading) | 0.51 m³/h | None; loaders push mud in over the lip at floor level |
 
+The 0.51 m³/h rests on the loaders filling a box in 1.5 min, 13.4 L/min each, faster than the 10 L/min assumed for a bucket shoveller. At 10 L/min each the fill takes 2.0 min, the stroke 4.05 min and the output with rest 0.45 m³/h, a ratio of 0.497, just under the 0.5 target [D6]. R1 is therefore met on paper but at risk; the trial settles it.
+
 The ratio is 0.57 against the 0.5 of R1 as Amish restated it, so **R1 is met on paper**, and nobody lifts or carries mud. The margin is small and rests on estimated loading, dumping and bucket rates; the timed trial of R1 at TRL 4 settles both numbers. Hand power still sets the haul speed: the second box doubles what each stroke delivers, not how fast the rope moves.
 
 ## E. Drum and rope storage (R5)
@@ -97,7 +103,7 @@ An 18 kN rope, 16.2 kN through an eye splice, has a factor of 18 on the working 
 
 ## H. Capstan anchor and stability
 
-The capstan anchor carries 1,100 N while hauling and 3,250 N at the overload limit; the 2,000 kg round sling has 19.6 kN of working load, six times that, and each shackle 9.8 kN [H1]. The capstan, with its bolted frame, weighs 65.7 kg and its weight holds 271 N m about its front edge [H2]. The sling is shackled to an eye 200 mm up, level with the drum axis, so the rope pull and the sling pull nearly line up. With the sling level the frame is held back by 315 N m; with it rising 5.7 degrees by 54 N m; at 10 degrees the tipping moment is 145 N m, still inside the 271 N m [H3 to H5]. The anchor bar that carries the sling is now bolted between the rear braces with two M12 bolts at each end, each in shear at about 1.6 kN at the overload limit. The rule is therefore that the sling runs level or rises 10 degrees at most, for example a 3 m sling to a point no higher than 500 mm. The ground stakes stop the frame skating sideways and are not counted as the anchor.
+The capstan anchor carries 1,100 N while hauling and 3,250 N at the overload limit; the 2,000 kg round sling has 19.6 kN of working load straight and 15.7 kN in a choke hitch round a tree (mode factor 0.8, EN 1492-2), 4.8 times that, and each shackle 9.8 kN [H1]. The capstan, with its bolted frame, weighs 65.5 kg and its weight holds 270 N m about its front edge [H2]. The sling is shackled to an eye 200 mm up, level with the drum axis, so the rope pull and the sling pull nearly line up. With the sling level the frame is held back by 315 N m; with it rising 5.7 degrees by 54 N m; at 10 degrees the tipping moment is 145 N m, still inside the 270 N m [H3 to H5]. The anchor bar that carries the sling is now bolted between the rear braces with two M12 bolts at each end, each in shear at about 1.6 kN at the overload limit. The rule is therefore that the sling runs level or rises 10 degrees at most, for example a 3 m sling to a point no higher than 500 mm. The ground stakes stop the frame skating sideways and are not counted as the anchor.
 
 ## I. Tail sheave block (R7)
 
@@ -105,7 +111,7 @@ With two boxes the tail rope always drags the empty box back, so the tail block 
 
 ## J. Shafts, chain and ratchet (R12)
 
-At the overload limit the 30 mm drum shaft sees 44 MPa of bending and 65 MPa of torsion, 121 MPa combined [J1]. The chain pull is 3,539 N, a factor of 5.0 on the 17.8 kN breaking load of ISO 08B-1 chain [J2]. The 25 mm crank shaft sees 93 MPa combined before the cross hole; the hole roughly doubles the local stress, which stays below yield [J3]. A ratchet tooth carries 4,091 N, 57 MPa on its 12 x 6 mm face, and the pawl pin 36 MPa in shear [J4].
+At the overload limit the 30 mm drum shaft sees 44 MPa of bending from the rope pull and 46 MPa from the overhang of the chain pull, added conservatively, and 65 MPa of torsion, 144 MPa combined [J1] (the independent review found the chain overhang missing in v0.4). The chain pull is 3,612 N once drum bearing friction is counted (3,539 N before), a factor of 4.93 on the 17.8 kN breaking load of ISO 08B-1 chain, just under the 5 that R6 asks [J2]; 5.03 at the 2,941 N the shear pin can release. A fix is proposed to Amish (SLH-STM-001 S5, SLH-DDR-005). The 25 mm crank shaft sees 93 MPa combined before the cross hole; the hole roughly doubles the local stress, which stays below yield [J3]. A ratchet tooth carries 4,091 N, 57 MPa on its 12 x 6 mm face, and the pawl pin 36 MPa in shear [J4].
 
 ## K. Stability in the haul and tipping at the dump
 
@@ -113,9 +119,9 @@ A full box has its centre of mass 458 mm behind the lip, so its weight holds it 
 
 ## L. Doorway fit, setup, mass, packing and cost (R4, R8, R9, R10)
 
-Each box is 214 mm wide and 258 mm over its shackle pins. On lines 300 mm apart the two boxes pass each other 42 mm apart in the room, and the ramp, now centred between the two lines, carries both 26 mm inside its cheeks; it is 646 mm outside, inside a 700 mm opening [L1]. The model checks both clearances. Setting up takes about 27 min of tasks, about 20 min with three people working in parallel, at the R8 limit, because the frame is bolted together on site (3 min) and two boxes are shackled (4 min); only a timed trial can confirm it [L2]. The heaviest single lifts are the drum with its bearings at 23.1 kg, a box at 16.1 kg, the tail plate at 11.0 kg and a side frame at 9.6 kg [L3].
+Each box is 214 mm wide and 258 mm over its shackle pins. On lines 300 mm apart the two boxes pass each other 42 mm apart in the room, and the ramp, now centred between the two lines, carries both 26 mm inside its cheeks; it is 646 mm outside, inside a 700 mm opening [L1]. The model checks both clearances. Setting up takes about 27 min of tasks, about 20 min with three people working in parallel, at the R8 limit, because the frame is bolted together on site (3 min) and two boxes are shackled (4 min); only a timed trial can confirm it [L2]. The heaviest single lifts are the drum with its bearings at 22.2 kg, a box at 16.2 kg, the tail plate at 11.0 kg and a side frame at 9.6 kg [L3].
 
-The flat-pack frame comes apart into two welded side frames, each 890 x 814 x 83 mm and 9.2 or 9.6 kg, and four cross members 516 mm long: the front and rear cross rails, the top tie and the anchor bar with its eye [L3a]. Each cross member has an 8 mm end plate at each end that bolts to the inside face of a side frame, with two M10 bolts for the rails and the tie and two M12 bolts for the anchor bar. Taking a small car boot as a small hatchback with the rear seats folded, 1,250 x 950 x 500 mm or 594 L, every piece fits and the boxed volume of the kit is about 454 L, 77 % of the space, with the rope bag, crank bearings and chain (30 L) carried inside the boxes and the ramp taken apart [L3b]. R9 is therefore met on paper with the seats folded. With the seats up the load floor is about 950 x 650 mm and the side frames do not lie flat in it [L3c]; whether that reading of "small car boot" is enough is put to Amish in the design decisions register.
+The flat-pack frame comes apart into two welded side frames, each 890 x 814 x 83 mm and 9.3 or 9.6 kg, and four cross members 516 mm long: the front and rear cross rails, the top tie and the anchor bar with its eye [L3a]. Each cross member has an 8 mm end plate at each end that bolts to the inside face of a side frame, with two M10 bolts for the rails and the tie and two M12 bolts for the anchor bar. Taking a small car boot as a small hatchback with the rear seats folded, 1,250 x 950 x 500 mm or 594 L, every piece fits and the boxed volume of the kit is about 407 L, 69 % of the space, with the rope bag, crank bearings and chain (30 L) carried inside the boxes and the ramp taken apart [L3b]. R9 is therefore met on paper with the seats folded. With the seats up the load floor is about 950 x 650 mm and the side frames do not lie flat in it [L3c]; whether that reading of "small car boot" is enough is put to Amish in the design decisions register.
 
 Value-engineering target: USD 2,000. Estimated cost of the constructable design: USD 1,055.60 (USD 944.40 under the target) [L4]. The rise of USD 168.10 is the second box (USD 80), its bridles (USD 54), 7 m more rope, the frame's end plates and drilling (USD 10), twelve frame bolts (USD 8) and paint (USD 5). The whole kit weighs about 154 kg with rope and sling [L5].
 
@@ -126,10 +132,10 @@ Value-engineering target: USD 2,000. Estimated cost of the constructable design:
 | ID | Requirement | Value | Target | Status |
 | --- | --- | --- | --- | --- |
 | R8 | Setup time | About 20 min with three people (estimate), at the limit | 20 min or less | Not verifiable at TRL 3 |
-| R1 | Output | 0.51 m³/h against 0.90 m³/h for buckets (ratio 0.57); nobody lifts or carries mud | No lifting or carrying of mud; at least 0.5 times the bucket crew | Met on paper |
-| R9 | Portability | Heaviest lift 23.1 kg; flat-pack frame, largest piece 890 x 814 x 83 mm; kit about 454 L in a 594 L small car boot | Restated R9: fits a small hatchback with the rear seats folded; heaviest part 25 kg or less | Met on paper (accepted by Amish, SLH-DDR-004) |
+| R1 | Output | 0.51 m³/h against 0.90 m³/h for buckets (ratio 0.57); nobody lifts or carries mud | No lifting or carrying of mud; at least 0.5 times the bucket crew | Met on paper, at risk: 0.497 if the loaders fill at a shoveller's rate [D6] |
+| R9 | Portability | Heaviest lift 22.2 kg; flat-pack frame, largest piece 890 x 814 x 83 mm; kit about 407 L in a 594 L small car boot | Restated R9: fits a small hatchback with the rear seats folded; heaviest part 25 kg or less | Met on paper (accepted by Amish, SLH-DDR-004) |
 | R2 | Crank force | 63 N each with two at the cranks (126 N for one) at 1,000 N | 150 N or less | Met on paper |
-| R6 | Rope and anchor strength | Rope factor 18 working, 5.4 at the 3,000 N limit; chain 5.0 | At least 5 times the working pull | Met on paper |
+| R6 | Rope and anchor strength | Rope factor 18 working, 5.4 at the 3,000 N limit; chain 4.9 | At least 5 times the working pull | At risk: chain just under 5 at the limit (proposed fix awaiting Amish, SLH-STM-001 S5) |
 | R7 | Tail anchor independent of walls | Four M12 anchors in the slab, 0.45 of recommended loads at the limit | Holds on a bare concrete floor, no wall contact | Met on paper (sound slab assumed) |
 | R10 | Cost | USD 1,055.60 | Value-engineering target USD 2,000 | Met on paper, within the target |
 | R11 | Overload limit | Shear pin releases at 2,451 N (1,961 to 2,941 N) | Rope tension limited to 3,000 N | Met on paper |
@@ -139,6 +145,33 @@ Value-engineering target: USD 2,000. Estimated cost of the constructable design:
 | R12 | Holds when let go | Two ratchet wheels and pawls on the drum shaft, one each way | Holds the load when the cranks are let go | Met by design |
 
 Counts: 1 not verifiable at TRL 3, 7 met on paper, 4 met by design; none not met or at risk.
+
+## Product requirement map (kit 1.9.1)
+
+SLH-PRS-001 renumbered the twelve requirements R1 to R12 as PR-001 to PR-012 and added PR-013 to PR-018. The sections above keep the old R numbers; Table 4 says where each product requirement is calculated or shown.
+
+Table 4. Where each product requirement is shown.
+
+| Product requirement | Was | Section or evidence |
+| --- | --- | --- |
+| PR-001 | R1 | D |
+| PR-002 | R2 | C |
+| PR-003 | R3 | A |
+| PR-004 | R4 | L1 |
+| PR-005 | R5 | E |
+| PR-006 | R6 | G, J2 |
+| PR-007 | R7 | I |
+| PR-008 | R8 | L2 |
+| PR-009 | R9 | L3 |
+| PR-010 | R10 | L4 |
+| PR-011 | R11 | F |
+| PR-012 | R12 | J4 |
+| PR-013 | | BOM make or buy column; 245-part model, `cad/fidelity.json` |
+| PR-014 | | BOM lines 2, 3, 4 and 23 (paint, sealed bearings); not calculated |
+| PR-015 | | E3 to E4 (6 m from the ramp roller) |
+| PR-016 | | BOM line 9, chain guard |
+| PR-017 | | K3 (237 N to start a full box, 119 N each with two people) |
+| PR-018 | | No water is added in this design; see SLH-OPT-001 for the comparison |
 
 ## Checks against the TRL 2 figures
 

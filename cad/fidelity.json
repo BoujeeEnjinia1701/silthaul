@@ -1,0 +1,47 @@
+{
+ "level": "D3",
+ "stage": "P3",
+ "hash": "0d52514b0c72d106",
+ "options": {
+  "A": {
+   "title": "Hand-capstan loop",
+   "parts": 245,
+   "made_or_bought": 72,
+   "fasteners": 161,
+   "welds": 12,
+   "bare": [],
+   "bare_share": 0.0,
+   "interference": [],
+   "mass_kg": 153.9,
+   "step_files": 72
+  },
+  "B": {
+   "title": "Crew-hauled box",
+   "parts": 97,
+   "made_or_bought": 40,
+   "fasteners": 55,
+   "welds": 2,
+   "bare": [],
+   "bare_share": 0.0,
+   "interference": [],
+   "mass_kg": 80.5,
+   "step_files": 0
+  },
+  "C": {
+   "title": "Hand slurry pump",
+   "parts": 62,
+   "made_or_bought": 42,
+   "fasteners": 18,
+   "welds": 2,
+   "bare": [],
+   "bare_share": 0.0,
+   "interference": [],
+   "mass_kg": 118.7,
+   "step_files": 0
+  }
+ },
+ "failures": [],
+ "warnings": [],
+ "passed": true,
+ "seconds": 198.5
+}

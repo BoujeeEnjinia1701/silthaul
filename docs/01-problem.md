@@ -31,12 +31,26 @@ Mechanical options exist but do not fit. Mines use powered double-drum scraper h
 
 ## Users and context
 
-| User | Need | Context |
+Table 1. Users and needs.
+
+| User type | Goals and needs | Typical use scenario | Pain points and challenges |
+| --- | --- | --- | --- |
+| Householders and volunteers | Get mud out of rooms faster and with less lifting and less time in the mud | Ground floors of homes, shops and places of worship after a flood | Heavy buckets, back and shoulder strain, long contact with contaminated water and silt |
+| Relief NGOs and community groups | A kit that is cheap, portable, needs no fuel and can be used by untrained volunteers after a short briefing | Many sites, poor road access, limited power | Equipment that needs power, special skills or a truck; volunteers turn over daily |
+| Municipal drain and sanitation crews | Clear silted drains and lanes where machines cannot reach | Narrow streets, open drains, culverts | Excavators and loaders cannot enter; manual clearing is slow |
+| Local fabricators | Drawings using stock steel, rope and pulleys | Workshops near flood-prone areas | No drawings for a hand slusher; unsure of weld and fit requirements |
+
+## Stakeholders
+
+Table 2. Stakeholders.
+
+| Stakeholder group | Role or interest | Engagement needed |
 | --- | --- | --- |
-| Householders and volunteers | Get mud out of rooms faster and with less lifting and less time in the mud | Ground floors of homes, shops and places of worship after a flood |
-| Relief NGOs and community groups | A kit that is cheap, portable, needs no fuel and can be used by untrained volunteers after a short briefing | Many sites, poor road access, limited power |
-| Municipal drain and sanitation crews | Clear silted drains and lanes where machines cannot reach | Narrow streets, open drains, culverts |
-| Local fabricators | Drawings using stock steel, rope and pulleys | Workshops near flood-prone areas |
+| Disaster management authorities and civil defence volunteers | Run flood clean-up and set its safety rules | Co-design partner candidate: trial rooms, crews, safety review (not agreed) |
+| Local health authorities | Advise on contamination, protective clothing and hygiene | Review of the safety notes and the briefing card |
+| Building owners and landlords | Own the slab the tail block is drilled into | Permission to drill; rule that walls are never anchors |
+| Rope, rigging and bearing suppliers | Supply rated sling, shackles, rope, chain and bearings | Quotes and rated parts at TRL 4 |
+| Standards and regulatory advisers | Machinery and lifting-gear rules of the country of use | Review of SLH-REG-001 items marked "to assess" |
 
 ## Operating environment
 

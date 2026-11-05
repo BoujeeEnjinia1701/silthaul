@@ -3,9 +3,9 @@ doc_id: SLH-DEC-001
 title: SiltHaul design decisions register
 project: SiltHaul
 doc_type: Design decisions register
-version: "0.3"
+version: "0.4"
 status: Draft
-date: '2026-10-03'
+date: 2026-11-03
 author: Amish Chadha
 license: CERN-OHL-S-2.0
 revisions:
@@ -21,6 +21,10 @@ revisions:
   date: '2026-10-03'
   author: Amish Chadha
   change: "Open decision 1 decided (round 2, 2A) and recorded as SLH-DDR-004; no open decisions"
+- version: "0.4"
+  date: 2026-11-03
+  author: Amish Chadha
+  change: "Kit 1.9.1: concept selection opened for Amish (SLH-DDR-005, Proposed, awaiting Amish); STEM fixes recorded as decided under the standing instruction (SLH-DDR-006)"
 ---
 
 # SiltHaul design decisions register
@@ -31,7 +35,11 @@ Every design decision still to be made, and every decision made, in one place. E
 
 ## Open decisions
 
-None. Open decision 1 (what "fits a small car boot" means) was decided by Amish on 2026-10-03: the rear seats folded; see Decisions made and SLH-DDR-004.
+One. Open decision 1 (what "fits a small car boot" means) was decided by Amish on 2026-10-03; see Decisions made and SLH-DDR-004.
+
+| # | Decision needed | Options | Recommendation | Affects in the build | Source |
+| --- | --- | --- | --- | --- | --- |
+| 2 | Which concept option to carry forward | A hand-capstan loop (126 of 160); B crew-hauled box (133); C hand slurry pump (96); or a hybrid | Proposed, awaiting Amish: no pick, because A and B are within 10 % (5.3 %); C is not recommended | Option A is the drawn, priced and planned design; choosing B means redoing the BOM, drawings and build plan | SLH-DDR-005, SLH-OPT-001 |
 
 ## To confirm when parts are bought
 
@@ -73,3 +81,4 @@ Value-engineering target: USD 2,000 (a hypothetical control target, not a limit)
 | 2026-10-03 | 2A: second box on the return leg so the rope loop carries mud both ways; R1 restated as "no lifting or carrying of mud; output at least 0.5 times the same crew with shovels and buckets" (now 0.57, met on paper) | Amish: "1A 2A 3A 4A 5A 6A 7A 8A 9A 10A 11A" | SLH-DDR-003, items 1 to 5 |
 | 2026-10-03 | 7A: bolted flat-pack frame (two welded side frames, four bolted cross members) that fits a small car boot, keeping the 25 kg heaviest-part limit (heaviest lift 23.1 kg) | Amish: "1A 2A 3A 4A 5A 6A 7A 8A 9A 10A 11A" | SLH-DDR-003, items 6 to 8 |
 | 2026-10-03 | 2A (round 2): R9 accepted with the rear seats folded and restated as "fits a small hatchback with the rear seats folded; heaviest part 25 kg or less"; met on paper (heaviest lift 23.1 kg; kit about 454 L in 594 L). No design change | Amish: "i agree with all the 46 recommendations you provided. please proceed." | SLH-DDR-004 |
+| 2026-11-03 | Foot boards with heel cleats and stakes added to option B; diaphragm stroke of option C cut from 120 to 40 mm (STEM fixes) | Decided under Amish's standing instruction of 2026-10-23 (fix keeps the working principle) | SLH-DDR-006 |

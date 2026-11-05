@@ -7,6 +7,7 @@ Overall sizes are dimensioned by the kit; main dimensions and interfaces are lis
 taken from PARAMS and derived(). The concept blueprint in media/ is SLH-DWG-010; the making
 sketches for the build plan are SLH-DWG-101 onward (cad/src/build_plan_media.py).
 """
+import math
 import shutil
 import sys
 from pathlib import Path
@@ -31,8 +32,11 @@ def safe_project_views(part, workdir, line_weight=0.35):
     bb = part.bounding_box()
     c = bb.center()
     d = max(bb.size.X, bb.size.Y, bb.size.Z) * 10
-    setups = {"front": ((c.X, c.Y - d, c.Z), (0, 0, 1)), "top": ((c.X, c.Y, c.Z + d), (0, 1, 0)),
-              "right": ((c.X + d, c.Y, c.Z), (0, 0, 1)), "iso": ((c.X + d, c.Y - d, c.Z + d * 0.8), (0, 0, 1))}
+    # The viewpoints are tilted 0.006 degrees off-axis: an exactly axis-aligned hidden-line projection of this many
+    # coincident faces can stall in the OpenCascade projector, and the tilt is far below drawing resolution.
+    t = d * math.tan(math.radians(0.006))
+    setups = {"front": ((c.X + t, c.Y - d, c.Z + t), (0, 0, 1)), "top": ((c.X + t, c.Y + t, c.Z + d), (0, 1, 0)),
+              "right": ((c.X + d, c.Y + t, c.Z + t), (0, 0, 1)), "iso": ((c.X + d, c.Y - d, c.Z + d * 0.8), (0, 0, 1))}
     out = {}
     for name, (origin, up) in setups.items():
         visible, hidden = part.project_to_viewport(origin, up, (c.X, c.Y, c.Z))
@@ -65,8 +69,8 @@ def capstan_sheet(C, D):
     s.add_svg(views["iso"], 276, 32, 140, 92, label="Isometric view", sublabel="Not to scale; stakes and sling not shown")
     s.add_notes("Main dimensions and interfaces (mm)", [
         f"Frame {fb.size.X:.0f} x {fb.size.Y:.0f} x {fb.size.Z:.0f}, 40 x 40 x 2 SHS, flat-pack:",
-        "two welded side frames 890 x 814 (9.2, 9.6 kg) and four bolted",
-        "cross members with 8 mm end plates (8.0 kg): 8 M10, 4 M12 (21)",
+        "two welded side frames 890 x 814 (9.3, 9.6 kg) and four bolted",
+        "cross members with 8 mm end plates (7.8 kg): 8 M10, 4 M12 (21)",
         f"Drum 219.1 x 3.0 tube, {D['drum_len']:.0f} between rings; axis {P['hd']:.0f} above ground",
         f"Two halves of {D['half_len']:.0f}, {D['turns']} turns of 10 rope each at {P['pitch']:.0f} pitch",
         "Pull half underwound (rope leaves at 85 up), return half overwound (315 up)",

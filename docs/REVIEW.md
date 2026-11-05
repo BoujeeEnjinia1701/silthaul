@@ -1,5 +1,59 @@
 # Review note: SiltHaul
 
+## Session 2026-10-24: kit 1.9.1 upgrade
+
+Brief: `/home/claude/fleet/ROLLOUT.md` (kit 1.7 to 1.9.1: pipeline documents and detailed D3 CAD for every option). Documents are dated 2026-11-03, the date the work was done; research was checked that day. No hardware was built or tested, and nothing was pushed.
+
+### What was added
+
+| Item | Files |
+| --- | --- |
+| STEM check, 26 claims, with independent review | `docs/01b-stem-check.md`, `docs/04-calcs/stem_check.py`, `docs/04-calcs/stem_results.csv` |
+| Concept options and first-order numbers for B and C | `docs/02a-concept-options.md`, `docs/04-calcs/options_calc.py` |
+| User and product requirements, generated traceability matrix | `docs/03a-user-requirements.md`, `docs/03-requirements.md` (v0.6), `docs/03b-traceability.md` |
+| Regulatory, feasibility, risk (PHA and design FMEA), market, plan | `docs/07-regulatory.md`, `docs/08-feasibility.md`, `docs/09-risk.md`, `docs/10-market.md`, `docs/11-plan.md` |
+| Decision records | `docs/decisions/0005-concept-selection.md`, `docs/decisions/0006-stem-check-fixes.md`, `docs/06-design-decisions.md` (v0.4) |
+| Kit 1.9 model, all three options at D3 | `cad/src/model.py`, `cad/src/slh_parts.py`, `cad/src/opt_b.py`, `cad/src/opt_c.py`, `cad/fidelity.json`, `cad/step/` |
+| Drawings, build plan pictures, product scene, concept media redrawn from the new model | `cad/src/sheets.py`, `cad/src/build_plan_media.py`, `cad/src/product_model.py` (hero with a mannequin on the ground, studio, exploded, detail), `cad/src/concept_media.py` |
+
+### Key results
+
+- CAD fidelity (`cad/fidelity.json`, level D3): option A 245 parts, 153.9 kg; option B 97 parts, 80.5 kg; option C 62 parts, 118.7 kg. No bare parts and no interference above 5 mm3 in any option.
+- STEM check: 12 within known science, 13 plausible to confirm (field data at TRL 4), 1 fix proposed to Amish, 0 failed. Status stays `open`.
+- Fixes made under the standing instruction of 2026-10-23 (recorded in `docs/decisions/0006-stem-check-fixes.md`): option B gets staked foot boards because boots slip on wet mud; option C's diaphragm stroke is cut from 120 mm to 40 mm because the 25 mm dish cannot take more. The first pass of sizing also corrected the chain overhang and drum bearing friction.
+- Option scores (SLH-OPT-001, of 160): A 126, B 133, C 96. A and B are within 10 %, so no pick is made.
+- BOM (option A): USD 1,055.60 against `budget_usd` 2,000, unchanged.
+- Numbers that moved in live documents: kit volume 454 L to 407 L, heaviest lift 22.2 kg, chain factor 4.9 at the 3,000 N limit. Historical text in this file and in the earlier decision records is left as written.
+
+### Requirements not met or at risk
+
+- PR-001 (output at least 0.5 times the bucket crew): option A 0.51 m3/h, ratio 0.57, but 0.497 if loaders fill at a shoveller's rate. At risk.
+- PR-006 (factor of 5 on the chain at the overload limit): 4.93. At risk until Amish picks a fix.
+- Option C misses PR-001 (ratio 0.49) and needs 2.8 times the wet waste; option B has no overload limit or brake (PR-002 and PR-018 would not be met as written).
+- PR-008 (setup time) and PR-014 (durability) can only be verified at TRL 4.
+
+### Decisions proposed, awaiting Amish
+
+1. Concept: A or B (or a hybrid), see `docs/decisions/0005-concept-selection.md`. The repo keeps A as the working design meanwhile. C is not recommended. Nothing previously declined by Amish was re-proposed.
+2. Chain factor (STM S5): (a) 3.5 mm shear pin (release 1,501 to 2,252 N, chain factor 6.6), (b) duplex 08B-2 chain, or (c) accept 4.93. This moves a safety limit, so it is not implemented.
+3. Restating PR-001 so it states the loader rate it assumes.
+
+### Kit and repo notes
+
+- The repo's own `weld_bead` extruded beads backwards on one side of a joint, so they floated off their joints; fixed in `cad/src/slh_parts.py`. No kit bug was needed to explain it.
+- Hidden-line projection stalls on exactly axis-aligned views; `cad/src/sheets.py` tilts the viewpoint 0.006 degrees off-axis.
+- `media/options.png` is not rendered: the brief forbids running `.kit/options.py`. README and OPT point to it as pending; no placeholder is committed.
+- The stale single-assembly STEP files (`cad/step/silthaul-*.step`) are removed; per-part and per-option assembly files replace them.
+
+### Safety
+
+- The hand-capstan loop holds up to 3,000 N in a rope in a flooded building. Keep the guard, shear pin and pawls, and the stop signal; do not trial any option on people before the TRL 4 plan is approved.
+- Option B has no overload limit; option C moves contaminated slurry through hoses and needs washing and PPE (see `docs/09-risk.md`).
+
+### Recommended next step
+
+Amish picks the concept and the S5 fix. Then, if A stays, fold the S5 fix into the model and BOM and write the TRL 4 plan; if B is picked, redo the BOM, drawings and renders for B. TRL 4 work has not been started.
+
 ## 2026-10-03: Amish's round-2 requirement decisions carried out
 
 Amish, 2026-10-03: "i agree with all the 46 recommendations you provided. please proceed." For SiltHaul this is decision 2A on R9, recorded in `docs/decisions/0004-r9-rear-seats-folded.md` (SLH-DDR-004) and in the register `docs/06-design-decisions.md` (SLH-DEC-001 v0.3). A records and wording change only: no geometry, bill of materials, drawings or pictures changed.

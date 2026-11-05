@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "cad" / "src")]
-from model import PARAMS as P, derived, masses, pack_pieces, capstan_parts  # noqa: E402
+from model import PARAMS as P, derived, masses, pack_pieces, side_frame_masses  # noqa: E402
 
 D = derived(P)
 g = 9.81
@@ -127,6 +127,11 @@ ratio_out = q_silt_rest / q_bucket
 say("D4", f"Bucket crew of four (two shovelling, two carrying): {q_bucket:.2f} m3/h; SiltHaul with the same rest allowance {q_silt_rest:.2f} m3/h; ratio {ratio_out:.2f} (R1 target 0.5)")
 lift_bucket = 1000 * A["rho_mud"] * g * 1.0 * 1e-3      # kJ per m3 to lift mud 1.0 m into and out of buckets
 carry_bucket = A["haul_m"] * 2                         # m walked per bucket trip
+# Sensitivity (independent review, SLH-STM-001): loaders may fill no faster than a bucket shoveller (10 L/min each)
+t_fill_slow = V_rated / (2 * A["bucket_fill_lpm"])
+t_stroke_slow = max(t_fill_slow, A["dump_min"] + A["walk_min"]) + t_haul
+q_slow = 60 / t_stroke_slow * V_rated / 1000 * A["work_rest"]
+say("D6", f"Sensitivity: if the two loaders fill no faster than shovellers into buckets ({A['bucket_fill_lpm']:.0f} L/min each) the fill takes {t_fill_slow:.2f} min, the stroke {t_stroke_slow:.2f} min and the output with rest {q_slow:.2f} m3/h, a ratio of {q_slow / q_bucket:.3f} (R1 target 0.5); the 1.5 min fill assumed above needs {V_rated / A['fill_min'] / 2:.1f} L/min each")
 say("D5", f"Per cubic metre the bucket crew lifts {A['rho_mud']:.1f} t through about 1 m ({lift_bucket:.0f} kJ) and walks about {1000 / 10 * carry_bucket / 1000:.1f} km carrying 10 L buckets; with SiltHaul the loaders push mud in over the lip at floor level and nobody lifts or carries it")
 
 # ------------------------------------------------------------------ E. drum and rope storage
@@ -158,7 +163,7 @@ say("G2", f"Bend ratios D/d: drum {P['drum_tube'][0] / P['rope_d']:.0f}, tail sh
 F_cap_w = F_w + A["rope_ret"]
 F_cap_max = F_max_r + 250.0
 wll_sling = 2000 * g
-say("H1", f"Capstan anchor pull {F_cap_w:.0f} N working, {F_cap_max:.0f} N at the overload limit; sling WLL {wll_sling / 1000:.1f} kN ({wll_sling / F_cap_max:.1f} times); shackle WLL 9.8 kN")
+say("H1", f"Capstan anchor pull {F_cap_w:.0f} N working, {F_cap_max:.0f} N at the overload limit; sling WLL {wll_sling / 1000:.1f} kN straight ({wll_sling / F_cap_max:.1f} times) or {0.8 * wll_sling / 1000:.1f} kN in a choke hitch, mode factor 0.8 ({0.8 * wll_sling / F_cap_max:.1f} times); shackle WLL 9.8 kN")
 m_cap = sum(M[k] for k in ("frame", "cross_members", "frame_bolts", "drum", "drum_bearings", "crank_bearings",
                            "crank_shaft", "cranks", "small_sprocket", "chain", "guard", "pawls"))
 x_front = abs(P["rail_x"][0])
@@ -199,9 +204,12 @@ arm = (yb - D["drum_len"] / 2) / 1000
 sig_b = F_cap_max * arm / (math.pi * 0.030 ** 3 / 32) / 1e6
 tau_t = T_drum_max / (math.pi * 0.030 ** 3 / 16) / 1e6
 vm = math.sqrt(sig_b ** 2 + 3 * tau_t ** 2)
-say("J1", f"Drum shaft 30 mm at the bearing: bending {sig_b:.0f} MPa, torsion {tau_t:.0f} MPa, combined {vm:.0f} MPa at the overload limit")
-F_chain = T_drum_max / (D["pd_big"] / 2000)
-say("J2", f"Chain pull {F_chain:.0f} N at the overload limit; 08B-1 breaking load 17.8 kN, factor {17800 / F_chain:.1f}")
+F_chain = T_drum_max / A["eta_brg"] / (D["pd_big"] / 2000)       # drum bearing friction adds to the chain's share of the torque
+ov_d = abs(D["y_spr"]) - (yb + P["ucp206"][5] / 2)                # chain pull overhangs the drum bearing (independent review)
+sig_b_ch = sig_b + F_chain * ov_d / 1000 / (math.pi * 0.030 ** 3 / 32) / 1e6   # added to the rope bending, a conservative sum
+vm = math.sqrt(sig_b_ch ** 2 + 3 * tau_t ** 2)
+say("J1", f"Drum shaft 30 mm at the bearing: bending {sig_b:.0f} MPa from the rope pull and {sig_b_ch - sig_b:.0f} MPa from the chain overhang, torsion {tau_t:.0f} MPa, combined {vm:.0f} MPa at the overload limit")
+say("J2", f"Chain pull {F_chain:.0f} N at the overload limit ({T_drum_max / (D['pd_big'] / 2000):.0f} N before drum bearing friction); 08B-1 breaking load 17.8 kN, factor {17800 / F_chain:.2f} (R6: 5)")
 ov = abs(D["y_spr"]) - (yb + P["ucp205"][5] / 2)
 sig_cs = F_chain * ov / 1000 / (math.pi * 0.025 ** 3 / 32) / 1e6
 tau_cs = T_pin / (math.pi * 0.025 ** 3 / 16) / 1e6
@@ -237,9 +245,7 @@ setup = [("Unload and carry the kit, three people", 5), ("Bolt the frame: four c
 serial = sum(m for _, m in setup)
 par = 5 + max(3 + 4 + 2, 6 + 1) + 4 + 2
 say("L2", f"Setup tasks {serial} min end to end; with three people working in parallel about {par} min (R8: 20 min)")
-cap = capstan_parts(P)
-rho_s = P["rho_steel"] * 1e-9
-m_side = max(cap["frame_side_m"].volume, cap["frame_side_p"].volume) * rho_s
+m_side = max(side_frame_masses(P).values())
 drum_lift = M["drum"] + M["drum_bearings"]
 say("L3", "Heaviest single lifts: drum with its bearings {:.1f} kg; box {:.1f} kg; side frame {:.1f} kg; tail plate {:.1f} kg (R9: 25 kg)".format(
     drum_lift, M["box"], m_side, M["tail_plate"]))
@@ -266,12 +272,12 @@ say("L5", f"Kit mass about {total_mass:.0f} kg including rope and sling")
 
 # ------------------------------------------------------------------ results against the requirements
 R = [
-    ("R1", f"{q_silt_rest:.2f} m3/h against {q_bucket:.2f} m3/h for buckets (ratio {ratio_out:.2f}); nobody lifts or carries mud", "No lifting or carrying of mud; at least 0.5 times the bucket crew", "Met on paper" if ratio_out >= 0.5 else "Not met on paper"),
+    ("R1", f"{q_silt_rest:.2f} m3/h against {q_bucket:.2f} m3/h for buckets (ratio {ratio_out:.2f}); nobody lifts or carries mud", "No lifting or carrying of mud; at least 0.5 times the bucket crew", ("Met on paper, at risk: 0.497 if the loaders fill at a shoveller's rate [D6]" if q_slow / q_bucket < 0.5 else "Met on paper") if ratio_out >= 0.5 else "Not met on paper"),
     ("R2", f"{handle_force(F_w, 2):.0f} N each with two at the crank ({handle_force(F_w, 1):.0f} N for one) at 1,000 N", "150 N or less", "Met on paper"),
     ("R3", f"{V_rated:.1f} L a box at a {h_fill:.0f} mm fill ({V_gross:.0f} L to the brim)", "About 40 L", "Met by design"),
     ("R4", f"Boxes {w_box:.0f} mm over the shackles, pass {gap_pass:.0f} mm apart; ramp {w_ramp:.0f} mm; tail plate 440 mm", "Pass a 0.7 m opening", "Met by design"),
     ("R5", f"{D['turns']} turns a half store {P['travel'] / 1000:.0f} m of travel; capstan at least 6 m from the door", "Up to 15 m tail to capstan", "Met by design"),
-    ("R6", f"Rope factor {mbs / F_w:.0f} working, {mbs_s / F_max_r:.1f} at the {F_max_r:.0f} N overload limit; chain {17800 / F_chain:.1f}", "At least 5 times the working pull", "Met on paper"),
+    ("R6", f"Rope factor {mbs / F_w:.0f} working, {mbs_s / F_max_r:.1f} at the {F_max_r:.0f} N overload limit; chain {17800 / F_chain:.1f}", "At least 5 times the working pull", "Met on paper" if 17800 / F_chain >= 5 else "At risk: chain just under 5 at the limit (proposed fix awaiting Amish, SLH-STM-001 S5)"),
     ("R7", f"Four M12 anchors in the slab, {util:.2f} of typical recommended loads at the overload limit", "Holds on a bare concrete floor, no wall contact", "Met on paper (sound slab assumed)"),
     ("R8", f"About {par} min with three people (estimate), at the limit", "20 min or less", "Not verifiable at TRL 3"),
     ("R9", f"Heaviest lift {max(m_side, drum_lift, M['box']):.1f} kg; flat-pack frame, largest piece {big[1][0]:.0f} x {big[1][1]:.0f} x {big[1][2]:.0f} mm; kit {vol:.0f} L in a {v_boot:.0f} L small car boot", "Car boot; heaviest part 25 kg or less", "Met on paper (rear seats folded)" if pack_ok and max(m_side, drum_lift) <= 25 else "At risk"),
